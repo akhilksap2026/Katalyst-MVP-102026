@@ -1,0 +1,19 @@
+kind = "design-system"
+previewPath = "/ksap-cloud-ui/"
+title = "KSAP Cloud UI Design System"
+description = "Shared KSAP Cloud UI system based on the supplied DESIGN.md version 6.1: exact product colors, Montserrat typography, accessible operations-console components, light/dark themes, accent palettes, density, and documented usage rules for Catalyst and future KSAP products."
+version = "1.0.0"
+id = "artifacts/ksap-cloud-ui"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/ksap-cloud-ui/" ]
+localPort = 25503
+
+[services.development]
+run = "pnpm --filter @workspace/ksap-cloud-ui run dev"
+
+[services.env]
+PORT = "25503"
+BASE_PATH = "/ksap-cloud-ui/"
