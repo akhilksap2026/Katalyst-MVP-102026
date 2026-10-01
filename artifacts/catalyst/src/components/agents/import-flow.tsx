@@ -1,7 +1,7 @@
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ContentTransition as ViewTransition } from "@/components/content-transition";
+import { useTranslation } from "react-i18next";
+import { Fragment, startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "@/lib/router";
-import { toast } from "sonner";
+import { toast } from "@workspace/ksap-cloud-ui/components/ui/sonner";
 import {
   AlertTriangle,
   Check,
@@ -14,15 +14,15 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@workspace/ksap-cloud-ui/components/ui/badge";
+import { Button } from "@workspace/ksap-cloud-ui/components/ui/button";
+import { Checkbox } from "@workspace/ksap-cloud-ui/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@workspace/ksap-cloud-ui/components/ui/input";
+import { Label } from "@workspace/ksap-cloud-ui/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@workspace/ksap-cloud-ui/components/ui/radio-group";
+import { Separator } from "@workspace/ksap-cloud-ui/components/ui/separator";
+import { Textarea } from "@workspace/ksap-cloud-ui/components/ui/textarea";
 import {
   DEFAULT_COMPARE_OPTIONS,
   buildSource,
@@ -43,7 +43,7 @@ import { compareSources, type CompareResult } from "@/lib/compare";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { CompareResults } from "@/components/agents/compare-results";
 import { SkeletonRows } from "@/components/state-block";
-import { cn } from "@/lib/utils";
+import { cn } from "@workspace/ksap-cloud-ui/lib/utils";
 
 import devAgentCsv from "@/data/agents/DEV/AGENT.csv?raw";
 import devEventsCsv from "@/data/agents/DEV/AGENT_EVENT_DETAILS.csv?raw";
@@ -109,6 +109,7 @@ function SourcePanel({
   onChange: (next: SourceState) => void;
   defaultLabel: string;
 }) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [paste, setPaste] = useState("");
@@ -145,8 +146,8 @@ function SourcePanel({
       addFiles(loaded);
     } catch {
       // File.text() can fail on read errors; tell the user instead of failing silently.
-      toast.error(`Could not read ${list.length > 1 ? "those files" : "the file"}.`, {
-        description: "Check the file is a readable CSV or XML export, then try again.",
+      toast.error(list.length > 1 ? t("importFlow.couldNotReadFiles") : t("importFlow.couldNotReadFile"), {
+        description: t("importFlow.readErrorHint"),
       });
     } finally {
       setReading(false);
@@ -170,28 +171,28 @@ function SourcePanel({
   return (
     <section aria-label={`Source ${sourceKey}`} className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="grid gap-1.5">
+        <div className="grid gap-2">
           <Label htmlFor={`agents-${sourceKey}-label`} className="text-caption">
-            Source label
+            {t("importFlow.sourceLabel")}
           </Label>
           <Input
             id={`agents-${sourceKey}-label`}
             value={state.label}
             onChange={(e) => onChange({ ...state, label: e.target.value })}
             placeholder={defaultLabel}
-            className="h-8 w-44 font-mono text-[13px]"
+            className="h-8 w-44 font-mono text-body"
           />
         </div>
-        <Badge variant="outline" className="gap-1.5 text-caption">
-          <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
-          Processed in your browser
+        <Badge variant="outline" className="gap-2 text-caption">
+          <ShieldCheck className="size-icon-sm text-primary" aria-hidden="true" />
+          {t("importFlow.processedInYourBrowser")}
         </Badge>
       </div>
 
       <div
         role="button"
         tabIndex={0}
-        aria-label={`Drop files for source ${sourceKey}`}
+        aria-label={t("importFlow.dropFilesFor", { key: sourceKey })}
         onClick={() => inputRef.current?.click()}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
@@ -211,15 +212,14 @@ function SourcePanel({
           dragging ? "border-primary bg-primary/5" : "hover:border-primary/60",
         )}
       >
-        <FileUp className="size-7 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-        <p className="text-sm font-medium">Drop files here, or click to choose</p>
+        <FileUp className="size-icon-lg text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+        <p className="text-body font-semibold">{t("importFlow.dropFilesHereOr")}</p>
         <p className="max-w-md text-caption text-muted-foreground">
-          AGENT.csv, AGENT_EVENT_DETAILS.csv, AGENT_ACTION_DETAILS.csv (any order, several at once) or one
-          DB.XML transmission set.
+          {t("importFlow.agentCsvAgentEvent")}
         </p>
         {reading && (
-          <div role="status" aria-label="Reading files" className="grid w-full gap-2 px-4">
-            <p className="text-caption text-muted-foreground">Reading files…</p>
+          <div role="status" aria-label={t("importFlow.readingFiles")} className="grid w-full gap-2 px-4">
+            <p className="text-caption text-muted-foreground">{t("importFlow.readingFiles2")}</p>
             <SkeletonRows rows={2} />
           </div>
         )}
@@ -234,16 +234,16 @@ function SourcePanel({
         />
       </div>
 
-      <div className="grid gap-1.5">
+      <div className="grid gap-2">
         <Label htmlFor={`agents-${sourceKey}-paste`} className="text-caption">
-          Or paste extract content
+          {t("importFlow.orPasteExtractContent")}
         </Label>
         <Textarea
           id={`agents-${sourceKey}-paste`}
           value={paste}
           onChange={(e) => setPaste(e.target.value)}
-          placeholder={"AGENT_GID,AGENT_XID,…\n…or a DB.XML fragment"}
-          className="min-h-20 font-mono text-[12px]"
+          placeholder={t("importFlow.pastePlaceholder")}
+          className="min-h-20 font-mono text-caption"
         />
         <div className="flex justify-end">
           <Button
@@ -253,7 +253,7 @@ function SourcePanel({
             disabled={!paste.trim()}
             data-testid={`agents-${sourceKey}-add-paste`}
           >
-            Add pasted content
+            {t("importFlow.addPastedContent")}
           </Button>
         </div>
       </div>
@@ -263,14 +263,14 @@ function SourcePanel({
           {state.files.map((f) => {
             const kind = detectKind(f.text);
             return (
-              <ViewTransition key={f.name}>
+              <Fragment key={f.name}>
               <li className="flex items-center gap-3 px-3 py-2">
-                <span className="truncate font-mono text-[12px]">{f.name}</span>
+                <span className="truncate font-mono text-caption">{f.name}</span>
                 <Badge
                   variant={kind.table ? "secondary" : "outline"}
-                  className={cn("ml-auto shrink-0 font-mono text-[11px]", !kind.table && "text-amber-600")}
+                  className={cn("ms-auto shrink-0 font-mono text-caption", !kind.table && "text-warning")}
                 >
-                  {kind.format === "dbxml" ? "DB.XML" : kind.table ? TABLE_LABEL[kind.table] : "Unrecognised"}
+                  {kind.format === "dbxml" ? "DB.XML" : kind.table ? TABLE_LABEL[kind.table] : t("importFlow.unrecognised")}
                 </Badge>
                 <button
                   type="button"
@@ -278,10 +278,10 @@ function SourcePanel({
                   onClick={() => removeFile(f.name)}
                   className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
-                  <X className="size-3.5" aria-hidden="true" />
+                  <X className="size-icon-sm" aria-hidden="true" />
                 </button>
               </li>
-              </ViewTransition>
+              </Fragment>
             );
           })}
         </ul>
@@ -295,8 +295,8 @@ function SourcePanel({
             onClick={() => startTransition(() => onChange({ ...state, files: [] }))}
             data-testid={`agents-${sourceKey}-clear`}
           >
-            <Trash2 className="size-3.5" aria-hidden="true" />
-            Clear source
+            <Trash2 className="size-icon-sm" aria-hidden="true" />
+            {t("importFlow.clearSource")}
           </Button>
         </div>
       )}
@@ -313,25 +313,26 @@ function OptionsPanel({
   options: CompareOptions;
   onChange: (next: CompareOptions) => void;
 }) {
+  const { t } = useTranslation();
   const row = "flex items-center justify-between gap-4";
   const [open, setOpen] = useState(false);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="flex min-h-6 items-center gap-1.5 rounded-md py-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+      <CollapsibleTrigger className="flex min-h-6 items-center gap-2 rounded-md py-1 text-body font-semibold text-muted-foreground hover:text-foreground">
         {open ? (
-          <ChevronDown className="size-4" aria-hidden="true" />
+          <ChevronDown className="size-icon-sm" aria-hidden="true" />
         ) : (
-          <ChevronRight className="size-4" aria-hidden="true" />
+          <ChevronRight className="size-icon-sm" aria-hidden="true" />
         )}
-        Options
+        {t("importFlow.options")}
       </CollapsibleTrigger>
       <CollapsibleContent className="pt-3">
         <div className="grid gap-4 rounded-lg border bg-card p-4">
           <div className={row}>
             <div>
-              <p className="flex items-center gap-1 text-sm font-medium">Match agents by <InfoTip text="How agents are paired across sources. XID ignores the domain so DEV and PROD pair up; GID is stricter." ask="XID or GID?" /></p>
+              <p className="flex items-center gap-1 text-body font-semibold">{t("importFlow.matchAgentsBy")}{" "}<InfoTip text={t("importFlow.tipMatch")} ask={t("importFlow.askMatch")} /></p>
               <p className="text-caption text-muted-foreground">
-                AGENT_XID ignores the domain; AGENT_GID includes it.
+                {t("importFlow.agentXidIgnoresThe")}
               </p>
             </div>
             <RadioGroup
@@ -339,16 +340,16 @@ function OptionsPanel({
               onValueChange={(v) => onChange({ ...options, matchBy: v as CompareOptions["matchBy"] })}
               className="flex gap-4"
             >
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="xid" id="agents-match-xid" />
                 <Label htmlFor="agents-match-xid" className="font-normal">
-                  AGENT_XID
+                  {t("importFlow.agentXid")}
                 </Label>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <RadioGroupItem value="gid" id="agents-match-gid" />
                 <Label htmlFor="agents-match-gid" className="font-normal">
-                  AGENT_GID
+                  {t("importFlow.agentGid")}
                 </Label>
               </div>
             </RadioGroup>
@@ -356,37 +357,37 @@ function OptionsPanel({
           <Separator />
           <div className={row}>
             <div>
-              <p className="flex items-center gap-1 text-sm font-medium">Ignore footprint columns <InfoTip text="Audit columns (who/when a row was created or updated) almost always differ between environments." ask="What is footprint?" /></p>
-              <p className="text-caption text-muted-foreground">INSERT_USER, INSERT_DATE, UPDATE_USER, UPDATE_DATE.</p>
+              <p className="flex items-center gap-1 text-body font-semibold">{t("importFlow.ignoreFootprintColumns")}{" "}<InfoTip text={t("importFlow.tipFootprint")} ask={t("importFlow.askFootprint")} /></p>
+              <p className="text-caption text-muted-foreground">{t("importFlow.insertUserInsertDate")}</p>
             </div>
             <Checkbox
               checked={options.ignoreFootprint}
               onCheckedChange={(v) => onChange({ ...options, ignoreFootprint: v === true })}
-              aria-label="Ignore footprint columns"
+              aria-label={t("importFlow.ignoreFootprintColumns")}
             />
           </div>
           <Separator />
           <div className={row}>
             <div>
-              <p className="text-sm font-medium">Ignore whitespace-only differences in parameters</p>
-              <p className="text-caption text-muted-foreground">Treat parameter text differing only by spaces as equal.</p>
+              <p className="text-body font-semibold">{t("importFlow.ignoreWhitespaceOnlyDifferences")}</p>
+              <p className="text-caption text-muted-foreground">{t("importFlow.treatParameterTextDiffering")}</p>
             </div>
             <Checkbox
               checked={options.ignoreWhitespace}
               onCheckedChange={(v) => onChange({ ...options, ignoreWhitespace: v === true })}
-              aria-label="Ignore whitespace-only differences"
+              aria-label={t("importFlow.ignoreWhitespaceOnlyDifferences2")}
             />
           </div>
           <Separator />
           <div className={row}>
             <div>
-              <p className="text-sm font-medium">Ignore case in IDs</p>
-              <p className="text-caption text-muted-foreground">Match and compare IDs case-insensitively.</p>
+              <p className="text-body font-semibold">{t("importFlow.ignoreCaseInIds")}</p>
+              <p className="text-caption text-muted-foreground">{t("importFlow.matchAndCompareIds")}</p>
             </div>
             <Checkbox
               checked={options.ignoreCase}
               onCheckedChange={(v) => onChange({ ...options, ignoreCase: v === true })}
-              aria-label="Ignore case in IDs"
+              aria-label={t("importFlow.ignoreCaseInIds")}
             />
           </div>
         </div>
@@ -398,18 +399,20 @@ function OptionsPanel({
 /* ------------------------------------------------------------------ flow */
 
 function SourceSummary({ counts, files }: { counts: { agents: number; events: number; actions: number } | null; files: number }) {
-  if (!counts || files === 0) return <p className="text-caption text-muted-foreground">No files yet.</p>;
+  const { t } = useTranslation();
+  if (!counts || files === 0) return <p className="text-caption text-muted-foreground">{t("importFlow.noFilesYet")}</p>;
   return (
     <p className="flex flex-wrap items-center gap-2 text-caption text-muted-foreground" aria-live="polite">
-      <Check className="size-3.5 text-emerald-600" aria-hidden="true" />
-      <span className="font-medium text-foreground">{counts.agents} agents</span> · {counts.events} events ·{" "}
-      {counts.actions} actions · {files} file(s)
-      {counts.agents === 0 && <span className="text-amber-600">— no agents found; check the files</span>}
+      <Check className="size-icon-sm text-success" aria-hidden="true" />
+      <span className="font-semibold text-foreground">{t("importFlow.agentsAgents", { agents: counts.agents })}</span>{" "}{t("importFlow.eventsEvents", { events: counts.events })}{" "}
+      {t("importFlow.actionsActionsFilesFile", { actions: counts.actions, files })}
+      {counts.agents === 0 && <span className="text-warning">{t("importFlow.noAgentsFoundCheck")}</span>}
     </p>
   );
 }
 
 export function AgentImportFlow() {
+  const { t } = useTranslation();
   // Labels and options are remembered between visits; files never are (privacy).
   const [labels, setLabels] = useLocalStorage("agents.labels", { a: "DEV", b: "PROD" });
   const [storedOptions, setOptions] = useLocalStorage<CompareOptions>("agents.options", DEFAULT_COMPARE_OPTIONS);
@@ -440,11 +443,11 @@ export function AgentImportFlow() {
       };
       setFilesA((cur) => merge(cur, sorted.a));
       setFilesB((cur) => merge(cur, sorted.b));
-      toast.success(`Sorted ${loaded.length} file(s): ${sorted.a.length} → ${a.label || "A"}, ${sorted.b.length} → ${b.label || "B"}`, {
-        description: "Wrong way round? Use Swap.",
+      toast.success(t("importFlow.sortedFiles", { count: loaded.length, a: sorted.a.length, aLabel: a.label || "A", b: sorted.b.length, bLabel: b.label || "B" }), {
+        description: t("importFlow.wrongWay"),
       });
     } catch {
-      toast.error("Could not read those files.", { description: "Check they are readable CSV or XML exports." });
+      toast.error(t("importFlow.couldNotReadThose"), { description: "Check they are readable CSV or XML exports." });
     } finally {
       setSorting(false);
     }
@@ -464,11 +467,16 @@ export function AgentImportFlow() {
       onlyB: res.counts.onlyB,
     });
     announce(
-      `Comparison ready: ${res.counts.differences} differences — ${res.counts.changed} changed, ` +
-        `${res.counts.onlyA} only in ${res.labelA}, ${res.counts.onlyB} only in ${res.labelB}, ` +
-        `${res.counts.identical} identical`,
-    );
-  };
+      t("importFlow.comparisonReady", {
+        differences: res.counts.differences,
+        changed: res.counts.changed,
+        onlyA: res.counts.onlyA,
+        labelA: res.labelA,
+        onlyB: res.counts.onlyB,
+        labelB: res.labelB,
+        identical: res.counts.identical,
+      }),
+    );  };
 
   const loadSample = useCallback(() => {
     setA({ label: "DEV", files: SAMPLE_FILES.A });
@@ -524,15 +532,15 @@ export function AgentImportFlow() {
 
   if (result)
     return (
-      <ViewTransition key="results" enter="slide-up" exit="fade-out" default="none">
+      <Fragment key="results">
         <CompareResults result={result} onBack={() => startTransition(() => setResult(null))} />
-      </ViewTransition>
+      </Fragment>
     );
 
-  const missing = !a.files.length && !b.files.length ? "Add files to both sources" : !canCompare ? "Add at least one agent to each source" : "";
+  const missing = !a.files.length && !b.files.length ? t("importFlow.missingBoth") : !canCompare ? t("importFlow.missingAgent") : "";
 
   return (
-    <ViewTransition key="workspace" enter="fade-in" exit="fade-out" default="none">
+    <Fragment key="workspace">
     <div className="flex flex-col gap-6">
       <Tour />
       <label
@@ -542,16 +550,16 @@ export function AgentImportFlow() {
           e.preventDefault();
           void addSorted(e.dataTransfer.files);
         }}
-        className="flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border-2 border-dashed bg-card px-5 py-5 hover:border-primary/60"
+        className="flex cursor-pointer flex-wrap items-center gap-3 rounded-lg border-2 border-dashed bg-card px-5 py-5 hover:border-primary/60"
       >
-        <FileUp className="size-6 text-primary" strokeWidth={1.5} aria-hidden="true" />
-        <span className="text-sm">
-          <span className="font-medium">Drop all your files here</span>{" "}
+        <FileUp className="size-icon-md text-primary" strokeWidth={1.5} aria-hidden="true" />
+        <span className="text-body">
+          <span className="font-semibold">{t("importFlow.dropAllYourFiles")}</span>{" "}
           <span className="text-muted-foreground">
-            from both environments — we'll sort them into A and B. Or click to choose.
+            {t("importFlow.fromBothEnvironmentsWe")}
           </span>
         </span>
-        {sorting && <span role="status" className="text-caption text-muted-foreground">Sorting…</span>}
+        {sorting && <span role="status" className="text-caption text-muted-foreground">{t("importFlow.sorting")}</span>}
         <input
           type="file"
           multiple
@@ -563,20 +571,20 @@ export function AgentImportFlow() {
           }}
           data-testid="agents-smart-input"
         />
-        <InfoTip text="Files are matched to a side by name (e.g. AGENT_prod.csv goes to PROD). If names don't say, repeated tables are split one per side. Always check the result and Swap if needed." ask="Which file formats are supported?" />
+        <InfoTip text={t("importFlow.tipFiles")} ask={t("importFlow.askFormats")} />
       </label>
 
       {bothEmpty && (
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed bg-card px-5 py-4">
-          <GitCompareArrows className="size-6 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
-          <p className="text-sm">
-            <span className="font-medium">Compare two environments.</span>{" "}
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed bg-card px-5 py-4">
+          <GitCompareArrows className="size-icon-md text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+          <p className="text-body">
+            <span className="font-semibold">{t("importFlow.compareTwoEnvironments")}</span>{" "}
             <span className="text-muted-foreground">
-              Drop the extracts for each side below, or see how it works with sample data.
+              {t("importFlow.dropTheExtractsFor")}
             </span>
           </p>
-          <Button variant="outline" size="sm" className="ml-auto" onClick={loadSample} data-testid="agents-try-sample">
-            Try sample data
+          <Button variant="outline" size="sm" className="ms-auto" onClick={loadSample} data-testid="agents-try-sample">
+            {t("importFlow.trySampleData")}
           </Button>
         </div>
       )}
@@ -588,15 +596,15 @@ export function AgentImportFlow() {
             ["B", b, setB, "PROD", countsB],
           ] as const
         ).map(([key, state, set, def, counts]) => (
-          <div key={key} className="flex flex-col gap-3 rounded-xl border bg-card/40 p-4">
+          <div key={key} className="flex flex-col gap-3 rounded-lg border bg-card/40 p-4">
             <div className="flex items-center gap-2">
-              <span className="grid size-6 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+              <span className="grid size-6 place-items-center rounded-full bg-primary text-caption font-semibold text-primary-foreground">
                 {key}
               </span>
-              <h2 className="text-sm font-semibold">Source {key}</h2>
+              <h2 className="text-body font-semibold">{t("importFlow.sourceKey", { key })}</h2>
               <InfoTip
-                text={`The ${key === "A" ? "first" : "second"} environment or extract to compare, e.g. ${def}. Add all three agent CSVs, or a single DB.XML file.`}
-                ask="Which file formats are supported?"
+                text={t(key === "A" ? "importFlow.tipSourceFirst" : "importFlow.tipSourceSecond", { def })}
+                ask={t("importFlow.askFormats")}
               />
             </div>
             <SourcePanel sourceKey={key} state={state} onChange={set} defaultLabel={def} />
@@ -606,21 +614,21 @@ export function AgentImportFlow() {
       </div>
 
       {warnings.length > 0 && (
-        <section aria-label="Warnings">
+        <section aria-label={t("importFlow.warnings")}>
           <h3 className="flex items-center gap-2 text-subheading font-semibold">
-            Warnings
-            <Badge variant="outline" className="text-amber-600">
+            {t("importFlow.warnings")}
+            <Badge variant="outline" className="text-warning">
               {warnings.length}
             </Badge>
-            <InfoTip text="Problems found while reading your files. Compare still runs; affected rows may be skipped." ask="What do the warnings mean?" />
+            <InfoTip text={t("importFlow.tipWarnings")} ask={t("importFlow.askWarnings")} />
           </h3>
-          <ul className="mt-2 flex flex-col gap-1.5">
+          <ul className="mt-2 flex flex-col gap-2">
             {warnings.map((w, i) => (
               <li
                 key={i}
-                className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm"
+                className="flex items-start gap-2 rounded-md border border-warning bg-warning-subtle px-3 py-2 text-body"
               >
-                <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600" aria-hidden="true" />
+                <AlertTriangle className="mt-1 size-icon-sm shrink-0 text-warning" aria-hidden="true" />
                 <span className="text-caption shrink-0 font-mono text-muted-foreground">
                   {w.source}:{w.file}:{w.line}
                 </span>
@@ -635,8 +643,8 @@ export function AgentImportFlow() {
 
       <div data-tour="compare" className="sticky bottom-0 z-10 -mx-6 flex flex-wrap items-center gap-3 border-t bg-background/95 px-6 py-3 backdrop-blur">
         <Button disabled={!canCompare} onClick={runCompare} data-testid="agents-compare">
-          <GitCompareArrows className="size-4" aria-hidden="true" />
-          Compare {a.label || "A"} vs {b.label || "B"}
+          <GitCompareArrows className="size-icon-sm" aria-hidden="true" />
+          {t("importFlow.compare")}{" "}{a.label || "A"}{" "}{t("importFlow.vs")}{" "}{b.label || "B"}
         </Button>
         <Button
           variant="outline"
@@ -646,13 +654,13 @@ export function AgentImportFlow() {
             setA(b);
             setB(a);
           }}
-          aria-label="Swap sources A and B"
+          aria-label={t("importFlow.swapSourcesAAnd")}
         >
-          <ArrowLeftRight className="size-4" aria-hidden="true" /> Swap
+          <ArrowLeftRight className="size-icon-sm" aria-hidden="true" />{" "}{t("importFlow.swap")}
         </Button>
-        {missing && <p className="text-caption text-muted-foreground">{missing} to compare.</p>}
+        {missing && <p className="text-caption text-muted-foreground">{t("importFlow.missingToCompare", { missing })}</p>}
       </div>
     </div>
-    </ViewTransition>
+    </Fragment>
   );
 }

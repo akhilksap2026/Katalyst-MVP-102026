@@ -1,12 +1,14 @@
+import { useTranslation } from "react-i18next";
+import { Alert, AlertDescription } from "@workspace/ksap-cloud-ui/components/ui/alert";
+import { PageHeader } from "@workspace/ksap-cloud-ui/components/patterns/page-header";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ContentTransition as ViewTransition } from "@/components/content-transition";
 import { useGo } from "@/hooks/use-go";
 import { Link } from "@/lib/router";
 import { ArrowRight, CornerDownLeft, Link2, Pin, PinOff, Search, Table2, Wand2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@workspace/ksap-cloud-ui/components/ui/badge";
+import { Input } from "@workspace/ksap-cloud-ui/components/ui/input";
 import { ErrorState } from "@/components/state-block";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@workspace/ksap-cloud-ui/components/ui/toggle-group";
 import { useActivity } from "@/hooks/use-activity";
 import {
   searchColumns,
@@ -16,7 +18,7 @@ import {
   type ColumnHit,
   type TableHit,
 } from "@/lib/dictionary";
-import { cn } from "@/lib/utils";
+import { cn } from "@workspace/ksap-cloud-ui/lib/utils";
 import { announce } from "@/components/shell/announcer";
 import { useApp } from "@/state/app";
 import { useDictionary } from "@/state/dictionary";
@@ -25,7 +27,8 @@ const MAX_TABLE_HITS = 12;
 const MAX_COLUMN_HITS = 15;
 
 export default function DictionaryPage() {
-  useActivity("tool", "Data Dictionary", "/dictionary");
+  const { t } = useTranslation();
+  useActivity("tool", t("nav.dataDictionary"), "/dictionary");
   const go = useGo();
   const { release } = useApp();
   const { index, pins, isPinned, togglePin, recents, pushRecentSearch, loadError } = useDictionary();
@@ -50,9 +53,9 @@ export default function DictionaryPage() {
 
   // Announce result counts to screen readers once the query settles (debounced,
   // and only for actual searches — not on first mount listing every table).
-  const resultSummary = `${tableHits.length} ${tableHits.length === 1 ? "table" : "tables"}${
-    query.trim() ? `, ${columnHits.length} ${columnHits.length === 1 ? "column" : "columns"}` : ""
-  }`;
+  const resultSummary = query.trim()
+    ? t("dictionary.resultSummaryWithColumns", { tables: tableHits.length, columns: columnHits.length })
+    : t("dictionary.resultSummary", { count: tableHits.length });
   useEffect(() => {
     if (!index || (!query.trim() && chips.length === 0)) return;
     const t = setTimeout(() => announce(resultSummary), 600);
@@ -95,45 +98,47 @@ export default function DictionaryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <header className="mb-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-[22px] font-semibold tracking-tight">Data Dictionary</h1>
-          <Badge variant="secondary" className="font-mono">{release}</Badge>
+      <PageHeader
+        className="mb-5"
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            {t("dictionary.dataDictionary")}
+            <Badge variant="secondary" className="font-mono">{release}</Badge>
+          </span>
+        }
+        action={
           <Link
             to="/dictionary/joins"
             onClick={(e) => {
               e.preventDefault();
               go("/dictionary/joins", "nav-forward");
             }}
-            className="ms-auto inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            className="inline-flex items-center gap-2 text-body text-primary-ink hover:underline"
           >
-            <Link2 className="size-4" aria-hidden="true" />
-            Find joins
-            <ArrowRight className="size-3.5" aria-hidden="true" />
+            <Link2 className="size-icon-sm" aria-hidden="true" />
+            {t("dictionary.findJoins")}
+            <ArrowRight className="size-icon-sm" aria-hidden="true" />
           </Link>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="mb-6 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2">
-        <Wand2 className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-        <p className="text-caption text-amber-700 dark:text-amber-300">
-          Sample dictionary for {release}. Replace with the KSAP dictionary before release.
-        </p>
-      </div>
+      <Alert variant="warning" className="mb-6">
+        <AlertDescription>{t("dictionary.sampleDictionaryForRelease", { release })}</AlertDescription>
+      </Alert>
 
       {loadError && (
         <div className="mb-6">
           <ErrorState
-            title={`The ${release} dictionary could not be loaded`}
-            body={`${loadError} If the problem persists after a refresh, pick another release from the header.`}
+            title={t("dictionary.loadFailedTitle", { release })}
+            body={t("dictionary.loadFailedBody", { error: loadError })}
           />
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_240px]">
+      <div className="grid gap-8 lg:grid-cols-split">
         <div className="min-w-0">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 size-icon-sm -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
               ref={inputRef}
               value={query}
@@ -142,9 +147,9 @@ export default function DictionaryPage() {
                 setActive(0);
               }}
               onKeyDown={onKeyDown}
-              placeholder="Search tables, columns, aliases… e.g. “ship stop”"
-              className="h-11 ps-9 text-[15px]"
-              aria-label="Search the data dictionary"
+              placeholder={t("dictionary.searchTablesColumnsAliases")}
+              className="h-11 ps-9 text-subheading"
+              aria-label={t("dictionary.searchTheDataDictionary")}
               role="combobox"
               aria-expanded="true"
               aria-controls="dict-results"
@@ -157,78 +162,77 @@ export default function DictionaryPage() {
               type="multiple"
               value={chips}
               onValueChange={setChips}
-              aria-label="Filter tables"
+              aria-label={t("dictionary.filterTables")}
             >
-              <ToggleGroupItem value="flex" aria-pressed={chips.includes("flex")} className="h-7 gap-1.5 px-2.5 text-xs">
-                <Wand2 className="size-3.5" aria-hidden="true" />
-                Has flex fields
+              <ToggleGroupItem value="flex" aria-pressed={chips.includes("flex")} className="h-7 gap-2 px-3 text-caption">
+                <Wand2 className="size-icon-sm" aria-hidden="true" />
+                {t("dictionary.hasFlexFields")}
               </ToggleGroupItem>
-              <ToggleGroupItem value="fk" aria-pressed={chips.includes("fk")} className="h-7 gap-1.5 px-2.5 text-xs">
-                <Link2 className="size-3.5" aria-hidden="true" />
-                Has foreign keys
+              <ToggleGroupItem value="fk" aria-pressed={chips.includes("fk")} className="h-7 gap-2 px-3 text-caption">
+                <Link2 className="size-icon-sm" aria-hidden="true" />
+                {t("dictionary.hasForeignKeys")}
               </ToggleGroupItem>
             </ToggleGroup>
             <span className="ms-auto text-caption text-muted-foreground">
-              {tableHits.length} {tableHits.length === 1 ? "table" : "tables"}
-              {query.trim() ? ` · ${columnHits.length} ${columnHits.length === 1 ? "column" : "columns"}` : ""}
+              {resultSummary}
             </span>
           </div>
 
-          <div id="dict-results" role="listbox" aria-label="Search results" className="mt-4 flex flex-col">
+          <div id="dict-results" role="listbox" aria-label={t("dictionary.searchResults")} className="mt-4 flex flex-col">
             {/* Tables group */}
             <div>
-              <h2 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-                Tables
+              <h2 className="mb-2 text-caption font-semibold text-muted-foreground">
+                {t("dictionary.tables")}
               </h2>
-              <ul className="divide-y rounded-xl border bg-card">
+              <ul className="divide-y rounded-lg border bg-card">
                 {tableHits.map((hit, i) => {
-                  const t = hit.table;
+                  const tbl = hit.table;
                   return (
-                    <li key={t.name} id={`dict-result-${i}`} role="option" aria-selected={active === i}>
+                    <li key={tbl.name} id={`dict-result-${i}`} role="option" aria-selected={active === i}>
                       <div
                         className={cn(
-                          "flex cursor-pointer items-center gap-3 px-3 py-2.5",
+                          "flex cursor-pointer items-center gap-3 px-3 py-3",
                           active === i && "bg-primary/5",
                         )}
                         onMouseEnter={() => setActive(i)}
                         onClick={() => openResult(i)}
                       >
-                        <Table2 className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <Table2 className="size-icon-sm shrink-0 text-muted-foreground" aria-hidden="true" />
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <ViewTransition name={`table-${t.name}`} share="text-morph" default="none">
-                              <span className="font-mono text-[13px] font-medium">{t.name}</span>
-                            </ViewTransition>
-                            <span className="font-mono text-caption text-muted-foreground">{t.alias}</span>
-                            {tableHasFlex(t) && (
-                              <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">flex</Badge>
+                            <>
+                              <span className="font-mono text-body font-semibold">{tbl.name}</span>
+                            </>
+                            <span className="font-mono text-caption text-muted-foreground">{tbl.alias}</span>
+                            {tableHasFlex(tbl) && (
+                              <Badge variant="secondary" className="px-2 text-caption">{t("dictionary.flex")}</Badge>
                             )}
-                            {t.foreignKeys.length > 0 && (
-                              <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-                                {t.foreignKeys.length} fk
+                            {tbl.foreignKeys.length > 0 && (
+                              <Badge variant="secondary" className="px-2 text-caption">
+                                {t("dictionary.lengthFk", { length: tbl.foreignKeys.length })}
                               </Badge>
                             )}
                           </div>
-                          <p className="truncate text-caption text-muted-foreground">{t.description}</p>
+                          <p className="truncate text-caption text-muted-foreground">{tbl.description}</p>
                         </div>
                         <button
                           type="button"
-                          aria-label={isPinned(t.name) ? `Unpin ${t.name}` : `Pin ${t.name}`}
+                          aria-label={isPinned(tbl.name) ? `Unpin ${tbl.name}` : `Pin ${tbl.name}`}
                           className="rounded p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           onClick={(e) => {
                             e.stopPropagation();
-                            togglePin(t.name);
+                            togglePin(tbl.name);
                           }}
                         >
-                          {isPinned(t.name) ? (
-                            <PinOff className="size-3.5" aria-hidden="true" />
+                          {isPinned(tbl.name) ? (
+                            <PinOff className="size-icon-sm" aria-hidden="true" />
                           ) : (
-                            <Pin className="size-3.5" aria-hidden="true" />
+                            <Pin className="size-icon-sm" aria-hidden="true" />
                           )}
                         </button>
                         {active === i && (
                           <span className="flex items-center gap-1 text-caption text-muted-foreground">
-                            <CornerDownLeft className="size-3" aria-hidden="true" />
+                            <CornerDownLeft className="size-icon-sm" aria-hidden="true" />
                           </span>
                         )}
                       </div>
@@ -237,7 +241,7 @@ export default function DictionaryPage() {
                 })}
                 {tableHits.length === 0 && (
                   <li className="px-3 py-6 text-center text-caption text-muted-foreground">
-                    No tables match{chips.length > 0 ? " with these filters" : ""}.
+                    {t("dictionary.noTablesMatch")}{chips.length > 0 ? " with these filters" : ""}.
                   </li>
                 )}
               </ul>
@@ -246,10 +250,10 @@ export default function DictionaryPage() {
             {/* Columns group */}
             {columnHits.length > 0 && (
               <div className="mt-6">
-                <h2 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-                  Columns
+                <h2 className="mb-2 text-caption font-semibold text-muted-foreground">
+                  {t("dictionary.columns")}
                 </h2>
-                <ul className="divide-y rounded-xl border bg-card">
+                <ul className="divide-y rounded-lg border bg-card">
                   {columnHits.map((hit, j) => {
                     const i = tableHits.length + j;
                     return (
@@ -264,20 +268,20 @@ export default function DictionaryPage() {
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-baseline gap-2">
-                              <span className="font-mono text-[13px] font-medium">{hit.column.name}</span>
+                              <span className="font-mono text-body font-semibold">{hit.column.name}</span>
                               <span className="font-mono text-caption text-muted-foreground">
                                 {hit.column.oracleDataType}
                               </span>
                             </div>
                             <p className="truncate text-caption text-muted-foreground">
-                              in{" "}
+                              {t("dictionary.in")}{" "}
                               <span className="font-mono text-primary">{hit.table.name}</span>{" "}
                               {hit.table.alias} — {hit.column.description}
                             </p>
                           </div>
                           {active === i && (
                             <span className="flex items-center gap-1 text-caption text-muted-foreground">
-                              <CornerDownLeft className="size-3" aria-hidden="true" />
+                              <CornerDownLeft className="size-icon-sm" aria-hidden="true" />
                             </span>
                           )}
                         </div>
@@ -291,14 +295,14 @@ export default function DictionaryPage() {
         </div>
 
         {/* Left column */}
-        <aside className="flex flex-col gap-6" aria-label="Pinned and recent">
+        <aside className="flex flex-col gap-6" aria-label={t("dictionary.pinnedAndRecent")}>
           <section>
-            <h2 className="mb-2 flex items-center gap-1.5 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-              <Pin className="size-3" aria-hidden="true" />
-              Pinned tables
+            <h2 className="mb-2 flex items-center gap-2 text-caption font-semibold text-muted-foreground">
+              <Pin className="size-icon-sm" aria-hidden="true" />
+              {t("dictionary.pinnedTables")}
             </h2>
             {pins.filter((p) => p.release === release).length === 0 ? (
-              <p className="text-caption text-muted-foreground">Pin tables to keep them here.</p>
+              <p className="text-caption text-muted-foreground">{t("dictionary.pinTablesToKeep")}</p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {pins
@@ -311,7 +315,7 @@ export default function DictionaryPage() {
                           e.preventDefault();
                           go(`/dictionary/${release}/${p.table}`, "nav-forward");
                         }}
-                        className="block truncate rounded-md border border-border bg-card px-2.5 py-1.5 font-mono text-xs hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="block truncate rounded-md border border-border bg-card px-3 py-2 font-mono text-caption hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {p.table}
                       </Link>
@@ -321,18 +325,18 @@ export default function DictionaryPage() {
             )}
           </section>
           <section>
-            <h2 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-              Recent searches
+            <h2 className="mb-2 text-caption font-semibold text-muted-foreground">
+              {t("dictionary.recentSearches")}
             </h2>
             {recents.length === 0 ? (
-              <p className="text-caption text-muted-foreground">Searches you run appear here.</p>
+              <p className="text-caption text-muted-foreground">{t("dictionary.searchesYouRunAppear")}</p>
             ) : (
               <ul className="flex flex-col gap-1">
                 {recents.map((r) => (
                   <li key={r}>
                     <button
                       type="button"
-                      className="w-full truncate rounded-md px-2.5 py-1.5 text-left text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="w-full truncate rounded-md px-3 py-2 text-start text-caption text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       onClick={() => {
                         setQuery(r);
                         setActive(0);

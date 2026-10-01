@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
 import { useNavigate } from "@/lib/router";
 import {
@@ -13,9 +14,10 @@ import {
   Table2,
   type LucideIcon,
 } from "lucide-react";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@workspace/ksap-cloud-ui/components/ui/command";
+import { Kbd } from "@workspace/ksap-cloud-ui/components/ui/kbd";
 import { listTables } from "@/lib/dictionary";
-import { PLANNED_FEATURES } from "@/data/planned";
+import { plannedFeatures } from "@/data/planned";
 import { useApp } from "@/state/app";
 
 type Group = "recent" | "tools" | "tables" | "actions" | "planned";
@@ -31,6 +33,7 @@ interface PaletteItem {
 }
 
 export function CommandPalette() {
+  const { t } = useTranslation();
   const { paletteOpen, setPaletteOpen, release, recents, pushRecent, setTrayOpen, cycleTheme, setShortcutsOpen } =
     useApp();
   const navigate = useNavigate();
@@ -40,35 +43,35 @@ export function CommandPalette() {
       navigate(to);
     };
     const list: PaletteItem[] = [
-      { id: "nav-home", group: "tools", label: "Home", icon: Home, keywords: "home start", run: go("/") },
-      { id: "nav-list", group: "tools", label: "List Utility", icon: ListChecks, keywords: "list utility gid in sql values", run: go("/list") },
-      { id: "nav-dictionary", group: "tools", label: "Data Dictionary", icon: BookOpen, keywords: "data dictionary tables columns release", run: go("/dictionary") },
-      { id: "nav-agents", group: "tools", label: "Agent Compare", icon: GitCompareArrows, keywords: "agent compare dev prod diff automation", run: go("/agents") },
+      { id: "nav-home", group: "tools", label: t("palette.home"), icon: Home, keywords: "home start", run: go("/") },
+      { id: "nav-list", group: "tools", label: t("palette.list"), icon: ListChecks, keywords: "list utility gid in sql values", run: go("/list") },
+      { id: "nav-dictionary", group: "tools", label: t("palette.dictionary"), icon: BookOpen, keywords: "data dictionary tables columns release", run: go("/dictionary") },
+      { id: "nav-agents", group: "tools", label: t("palette.agents"), icon: GitCompareArrows, keywords: "agent compare dev prod diff automation", run: go("/agents") },
       ...listTables(release).map((table) => ({
         id: `table-${table}`,
         group: "tables" as const,
         label: table,
-        hint: `Dictionary · ${release}`,
+        hint: t("palette.dictionaryHint", { release }),
         icon: Table2,
         keywords: `${table} table ${release}`.toLowerCase(),
         run: go(`/dictionary/${release}/${table}`),
       })),
-      { id: "act-tray", group: "actions", label: "Open list tray", icon: ListChecks, keywords: "tray list clipboard", run: () => setTrayOpen(true) },
-      { id: "act-compare", group: "actions", label: "Compare agents", icon: GitCompareArrows, keywords: "compare agents diff", run: go("/agents") },
-      { id: "act-theme", group: "actions", label: "Switch theme", icon: Monitor, keywords: "theme light dark system", run: cycleTheme },
-      { id: "act-shortcuts", group: "actions", label: "Show keyboard shortcuts", icon: Keyboard, keywords: "keyboard shortcuts help keys", run: () => setShortcutsOpen(true) },
-      ...PLANNED_FEATURES.map((f) => ({
+      { id: "act-tray", group: "actions", label: t("palette.tray"), icon: ListChecks, keywords: "tray list clipboard", run: () => setTrayOpen(true) },
+      { id: "act-compare", group: "actions", label: t("palette.compare"), icon: GitCompareArrows, keywords: "compare agents diff", run: go("/agents") },
+      { id: "act-theme", group: "actions", label: t("palette.theme"), icon: Monitor, keywords: "theme light dark system", run: cycleTheme },
+      { id: "act-shortcuts", group: "actions", label: t("palette.shortcuts"), icon: Keyboard, keywords: "keyboard shortcuts help keys", run: () => setShortcutsOpen(true) },
+      ...plannedFeatures(t).map((f) => ({
         id: `planned-${f.slug}`,
         group: "planned" as const,
         label: f.title,
-        hint: "Planned",
+        hint: t("palette.planned"),
         icon: Bot,
         keywords: `${f.title} planned`.toLowerCase(),
         run: go(`/planned/${f.slug}`),
       })),
     ];
     return list;
-  }, [navigate, release, setTrayOpen, cycleTheme, setShortcutsOpen]);
+  }, [navigate, release, setTrayOpen, cycleTheme, setShortcutsOpen, t]);
 
   const recentItems = useMemo(() => {
     const byId = new Map(items.map((i) => [i.id, i]));
@@ -81,16 +84,20 @@ export function CommandPalette() {
     item.run();
   };
 
-  const ThemeIcon = Monitor;
 
   return (
-    <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen} title="Search and commands" description="Search tools, tables and actions">
-      <CommandInput placeholder="Search tools, tables, actions…" />
+    <CommandDialog
+      open={paletteOpen}
+      onOpenChange={setPaletteOpen}
+      title={t("commandPalette.searchAndCommands")}
+      description={t("commandPalette.description")}
+    >
+      <CommandInput placeholder={t("commandPalette.searchToolsTablesActions")} />
       <CommandList>
-        <CommandEmpty>No results. Try a table name, a tool, or an action.</CommandEmpty>
+        <CommandEmpty>{t("commandPalette.noResultsTryA")}</CommandEmpty>
 
         {recentItems.length > 0 && (
-          <CommandGroup heading="Recent">
+          <CommandGroup heading={t("palette.recent")}>
             {recentItems.map((item) => (
               <CommandItem
                 key={`recent-${item.id}`}
@@ -98,7 +105,7 @@ export function CommandPalette() {
                 onSelect={() => runItem(item)}
                 keywords={item.keywords.split(" ")}
               >
-                <Clock className="size-4 text-muted-foreground" aria-hidden="true" />
+                <Clock className="size-icon-sm text-muted-foreground" aria-hidden="true" />
                 <span>{item.label}</span>
                 {item.hint && <span className="ms-auto text-caption text-muted-foreground">{item.hint}</span>}
               </CommandItem>
@@ -106,7 +113,7 @@ export function CommandPalette() {
           </CommandGroup>
         )}
 
-        <CommandGroup heading="Tools">
+        <CommandGroup heading={t("palette.tools")}>
           {items.filter((i) => i.group === "tools").map((item) => (
             <CommandItem
               key={item.id}
@@ -121,7 +128,7 @@ export function CommandPalette() {
           ))}
         </CommandGroup>
 
-        <CommandGroup heading={`Tables · ${release}`}>
+        <CommandGroup heading={t("palette.tablesHeading", { release })}>
           {items.filter((i) => i.group === "tables").map((item) => (
             <CommandItem
               key={item.id}
@@ -130,7 +137,7 @@ export function CommandPalette() {
               keywords={item.keywords.split(" ")}
             >
               <item.icon className="size-4 text-muted-foreground" aria-hidden="true" />
-              <span className="font-mono text-[13px]">{item.label}</span>
+              <span className="font-mono text-body">{item.label}</span>
               {item.hint && <span className="ms-auto text-caption text-muted-foreground">{item.hint}</span>}
             </CommandItem>
           ))}
@@ -138,7 +145,7 @@ export function CommandPalette() {
 
         <CommandSeparator />
 
-        <CommandGroup heading="Actions">
+        <CommandGroup heading={t("palette.actions")}>
           {items.filter((i) => i.group === "actions").map((item) => (
             <CommandItem
               key={item.id}
@@ -150,14 +157,14 @@ export function CommandPalette() {
               <span>{item.label}</span>
               {item.id === "act-theme" && (
                 <CommandShortcut>
-                  <ThemeIcon className="size-3.5" aria-hidden="true" /> cycles light, dark, system
+                  <Monitor className="size-icon-sm" aria-hidden="true" />{" "}{t("commandPalette.cyclesLightDarkSystem")}
                 </CommandShortcut>
               )}
             </CommandItem>
           ))}
         </CommandGroup>
 
-        <CommandGroup heading="Planned">
+        <CommandGroup heading={t("palette.planned")}>
           {items.filter((i) => i.group === "planned").map((item) => (
             <CommandItem
               key={item.id}
@@ -168,7 +175,7 @@ export function CommandPalette() {
               <item.icon className="size-4 text-muted-foreground" aria-hidden="true" />
               <span className="text-muted-foreground">{item.label}</span>
               {item.hint && (
-                <span className="ms-auto rounded-sm border border-border px-1.5 py-0.5 text-caption text-muted-foreground">
+                <span className="ms-auto rounded-sm border border-border px-2 py-1 text-caption text-muted-foreground">
                   {item.hint}
                 </span>
               )}
@@ -177,10 +184,10 @@ export function CommandPalette() {
         </CommandGroup>
       </CommandList>
       <div className="flex items-center gap-3 border-t px-3 py-2 text-caption text-muted-foreground" aria-hidden="true">
-        <Search className="size-3.5" />
-        <span className="flex items-center gap-1"><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
-        <span className="flex items-center gap-1"><kbd>↵</kbd> open</span>
-        <span className="flex items-center gap-1 ms-auto"><kbd>esc</kbd> close</span>
+        <Search className="size-icon-sm" />
+        <span className="flex items-center gap-1"><Kbd>↑</Kbd><Kbd>↓</Kbd>{" "}{t("commandPalette.navigate")}</span>
+        <span className="flex items-center gap-1"><Kbd>↵</Kbd>{" "}{t("commandPalette.open")}</span>
+        <span className="flex items-center gap-1 ms-auto"><Kbd>{t("commandPalette.esc")}</Kbd>{" "}{t("commandPalette.close")}</span>
       </div>
     </CommandDialog>
   );

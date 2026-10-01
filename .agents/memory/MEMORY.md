@@ -1,1 +1,2 @@
 - [React runtime compatibility](react-runtime-compatibility.md) — prerelease React typings can accept APIs absent from the stable runtime.
+- [Nix browser runtime](nix-browser-runtime.md) — direct browser audits need a compatible managed browser, not arbitrary bundled shared libraries.

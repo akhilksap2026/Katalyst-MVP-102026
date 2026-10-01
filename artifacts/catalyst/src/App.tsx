@@ -4,6 +4,7 @@ import { AppShell } from "@/components/shell/app-shell";
 import { AppProvider } from "@/state/app";
 import { ListToolProvider } from "@/state/list-tool";
 import { DictionaryProvider } from "@/state/dictionary";
+import { TooltipProvider } from "@workspace/ksap-cloud-ui/components/ui/tooltip";
 import HomePage from "@/pages/home";
 
 // Route-level code splitting; the shell shows a skeleton and reveals the page with a transition.
@@ -16,6 +17,7 @@ const PlannedPage = lazy(() => import("@/pages/planned"));
 
 export default function App() {
   return (
+    <TooltipProvider delayDuration={150}>
     <AppProvider>
       <ListToolProvider>
         <DictionaryProvider>
@@ -32,5 +34,6 @@ export default function App() {
         </DictionaryProvider>
       </ListToolProvider>
     </AppProvider>
+    </TooltipProvider>
   );
 }

@@ -10,7 +10,10 @@ const merge = extendTailwindMerge({
       "min-h": ["min-h-textarea"],
       "max-w": ["max-w-page", "max-w-sheet"],
       size: ["size-control", "size-icon-xs", "size-icon-sm", "size-icon-md", "size-icon-lg", "size-icon-xl"],
-      shadow: ["shadow-overlay", "shadow-critical"],
+      shadow: ["shadow-overlay", "shadow-critical", "shadow-hairline"],
+      "border-w": ["border-w-control"],
+      "max-h": ["max-h-table"],
+      "grid-cols": ["grid-cols-hero", "grid-cols-split", "grid-cols-board"],
     },
   },
 })

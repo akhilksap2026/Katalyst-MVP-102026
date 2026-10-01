@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Info, ShieldCheck } from "lucide-react";
 import {
   Dialog,
@@ -5,12 +6,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@workspace/ksap-cloud-ui/components/ui/dialog";
 import { dictionaryManifest } from "@/lib/dictionary";
 import { APP_VERSION } from "@/lib/version";
 import { useApp } from "@/state/app";
 
 export function AboutDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { t } = useTranslation();
   const { release } = useApp();
   const current = dictionaryManifest.releases.find((r) => r.id === release);
 
@@ -19,36 +21,33 @@ export function AboutDialog({ open, onOpenChange }: { open: boolean; onOpenChang
       <DialogContent data-testid="about-dialog" className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Info className="size-4 text-primary" aria-hidden="true" />
-            About Catalyst
+            <Info className="size-icon-sm text-primary" aria-hidden="true" />
+            {t("aboutDialog.aboutCatalyst")}
           </DialogTitle>
-          <DialogDescription>Consultant toolkit for OTM — connectionless prototype.</DialogDescription>
+          <DialogDescription>{t("aboutDialog.consultantToolkitForOtm")}</DialogDescription>
         </DialogHeader>
-        <dl className="grid gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
+        <dl className="grid gap-3 rounded-lg border bg-muted/40 p-4 text-body">
           <div className="flex items-baseline justify-between gap-4">
-            <dt className="text-muted-foreground">Version</dt>
+            <dt className="text-muted-foreground">{t("aboutDialog.version")}</dt>
             <dd className="font-mono" data-testid="about-version">
               {APP_VERSION}
             </dd>
           </div>
           <div className="flex items-baseline justify-between gap-4">
-            <dt className="text-muted-foreground">Dictionary release</dt>
+            <dt className="text-muted-foreground">{t("aboutDialog.dictionaryRelease")}</dt>
             <dd className="font-mono" data-testid="about-release">
               {release}
               {current ? ` · ${current.status}` : ""}
             </dd>
           </div>
         </dl>
-        <section aria-label="Privacy statement" className="grid gap-1.5">
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-            <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
-            Privacy statement
+        <section aria-label={t("aboutDialog.privacyStatement")} className="grid gap-2">
+          <h3 className="flex items-center gap-2 text-body font-semibold">
+            <ShieldCheck className="size-icon-sm text-primary" aria-hidden="true" />
+            {t("aboutDialog.privacyStatement")}
           </h3>
-          <p className="text-[13px] leading-6 text-muted-foreground">
-            Everything you paste or upload is processed in your browser and never sent over the
-            network. No content is stored, logged or shared — analytics record only anonymous
-            event names and counts, such as <span className="font-mono">list_copied</span>. Your
-            data leaves this page only if you copy or export it yourself.
+          <p className="text-body leading-6 text-muted-foreground">
+            {t("aboutDialog.everythingYouPasteOr")}{" "}<span className="font-mono">{t("aboutDialog.listCopied")}</span>{t("aboutDialog.yourDataLeavesThis")}
           </p>
         </section>
       </DialogContent>

@@ -1,18 +1,20 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@workspace/ksap-cloud-ui/components/ui/button";
 import { readStorage, writeStorage } from "@/lib/storage";
 
 const STEPS = [
-  { target: '[data-tour="drop"]', title: "1. Drop everything here", body: "Drop all your agent files at once, from both environments. Catalyst sorts them into Source A and Source B by file name and table." },
-  { target: '[data-tour="sources"]', title: "2. Check each side", body: "Each source shows what was found. Rename the labels (DEV, PROD…), add or remove files, or paste text. Use Swap if the sides came out the wrong way round." },
-  { target: '[data-tour="compare"]', title: "3. Compare", body: "When both sides have agents, press Compare. Your labels and options are remembered for next time; your files never are." },
-  { target: 'button[aria-label="Open assistant"]', title: "4. Ask for help", body: "Stuck on a term or want a summary of the differences? The assistant answers from your comparison. Look for the ? icons for quick explanations." },
+  { target: '[data-tour="drop"]', id: "s0" },
+  { target: '[data-tour="sources"]', id: "s1" },
+  { target: '[data-tour="compare"]', id: "s2" },
+  { target: '[data-tour="assistant"]', id: "s3" },
 ];
 
 const KEY = "agents.tourDone";
 
 /** First-run walkthrough. Re-run any time with the `catalyst:tour` window event. */
 export function Tour() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<number | null>(() => (readStorage(KEY, false) ? null : 0));
 
   useEffect(() => {
@@ -25,13 +27,10 @@ export function Tour() {
     if (step === null) return;
     const el = document.querySelector<HTMLElement>(STEPS[step].target);
     if (!el) return;
-    const prev = el.style.cssText;
-    el.style.outline = "2px solid var(--color-primary, #0d9488)";
-    el.style.outlineOffset = "4px";
-    el.style.borderRadius = "12px";
+    el.classList.add("outline-2", "outline-offset-4", "outline-ring", "rounded-lg");
     el.scrollIntoView({ block: "center", behavior: "smooth" });
     return () => {
-      el.style.cssText = prev;
+      el.classList.remove("outline-2", "outline-offset-4", "outline-ring", "rounded-lg");
     };
   }, [step]);
 
@@ -44,25 +43,25 @@ export function Tour() {
   return (
     <div
       role="dialog"
-      aria-label="Guided tour"
-      className="fixed bottom-20 left-1/2 z-50 w-[min(92vw,26rem)] -translate-x-1/2 rounded-xl border bg-popover p-4 text-popover-foreground shadow-xl"
+      aria-label={t("tour.guidedTour")}
+      className="fixed inset-x-4 bottom-20 z-50 mx-auto max-w-sheet rounded-lg border bg-popover p-4 text-popover-foreground shadow-overlay"
     >
-      <p className="text-sm font-semibold">{s.title}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{s.body}</p>
+      <p className="text-body font-semibold">{t(`tour.steps.${s.id}.title`)}</p>
+      <p className="mt-1 text-body text-muted-foreground">{t(`tour.steps.${s.id}.body`)}</p>
       <div className="mt-3 flex items-center gap-2">
         <span className="text-caption text-muted-foreground">
           {step + 1} / {STEPS.length}
         </span>
-        <Button variant="ghost" size="sm" className="ml-auto" onClick={done}>
-          Skip
+        <Button variant="ghost" size="sm" className="ms-auto" onClick={done}>
+          {t("tour.skip")}
         </Button>
         {step < STEPS.length - 1 ? (
           <Button size="sm" onClick={() => setStep(step + 1)}>
-            Next
+            {t("tour.next")}
           </Button>
         ) : (
           <Button size="sm" onClick={done}>
-            Done
+            {t("tour.done")}
           </Button>
         )}
       </div>

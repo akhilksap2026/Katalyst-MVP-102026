@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
+import i18n from "i18next";
 import { getIndex, type DictionaryIndex } from "@/lib/dictionary";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useApp } from "@/state/app";
@@ -31,11 +32,11 @@ export function DictionaryProvider({ children }: { children: ReactNode }) {
   const { index, loadError } = useMemo(() => {
     try {
       const idx = getIndex(release) ?? null;
-      return { index: idx, loadError: idx ? null : `No dictionary data found for release ${release}.` };
+      return { index: idx, loadError: idx ? null : i18n.t("dictionaryState.noData", { release }) };
     } catch {
       return {
         index: null,
-        loadError: `The ${release} dictionary failed to load — its data file may be corrupted. Try another release from the header, then refresh the page.`,
+        loadError: i18n.t("dictionaryState.failed", { release }),
       };
     }
   }, [release]);

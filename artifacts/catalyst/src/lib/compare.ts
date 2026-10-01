@@ -6,6 +6,7 @@
  * handling (match key, footprint, whitespace, case) is applied here so the UI
  * only renders the result.
  */
+import { tr } from "@/lib/tr";
 
 import {
   FOOTPRINT,
@@ -458,22 +459,22 @@ export function exportRows(cmp: AgentComparison): ExportRow[] {
 export function summaryText(result: CompareResult): string {
   const { labelA, labelB, counts } = result;
   const lines = [
-    `Agent comparison: ${labelA} vs ${labelB}`,
-    `Changed: ${counts.changed} · Only in ${labelA}: ${counts.onlyA} · Only in ${labelB}: ${counts.onlyB} · Identical: ${counts.identical}`,
+    tr("summary.title", { labelA, labelB }),
+    tr("summary.counts", { changed: counts.changed, labelA, onlyA: counts.onlyA, labelB, onlyB: counts.onlyB, identical: counts.identical }),
   ];
   for (const a of result.agents) {
     if (a.status === "identical") continue;
     const bits: string[] = [];
-    if (a.headerDiffs.length) bits.push(`${a.headerDiffs.length} header`);
+    if (a.headerDiffs.length) bits.push(tr("summary.header", { count: a.headerDiffs.length }));
     const ec = eventChanges(a);
     const ac = actionChanges(a);
-    if (ec) bits.push(`${ec} event${ec === 1 ? "" : "s"}`);
-    if (ac) bits.push(`${ac} action${ac === 1 ? "" : "s"}`);
+    if (ec) bits.push(tr("summary.events", { count: ec }));
+    if (ac) bits.push(tr("summary.actions", { count: ac }));
     const label =
-      a.status === "only-a" ? `only in ${labelA}`
-      : a.status === "only-b" ? `only in ${labelB}`
+      a.status === "only-a" ? tr("summary.onlyIn", { label: labelA })
+      : a.status === "only-b" ? tr("summary.onlyIn", { label: labelB })
       : bits.join(", ");
-    lines.push(`- ${a.xid}: ${label}`);
+    lines.push(tr("summary.line", { xid: a.xid, label }));
   }
   return lines.join("\n");
 }

@@ -1,8 +1,9 @@
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ContentTransition as ViewTransition } from "@/components/content-transition";
+import { StatusBadge, type StatusBadgeStatus } from "@workspace/ksap-cloud-ui/components/patterns/status-badge";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@workspace/ksap-cloud-ui/components/ui/resizable";
+import { Kbd } from "@workspace/ksap-cloud-ui/components/ui/kbd";
+import { Trans, useTranslation } from "react-i18next";
+import { Fragment, startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowDownUp,
-  ArrowLeft,
   Check,
   ChevronDown,
   ChevronRight,
@@ -11,19 +12,18 @@ import {
   Download,
   Equal,
   FileSpreadsheet,
-  PencilLine,
   SkipBack,
   SkipForward,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@workspace/ksap-cloud-ui/components/ui/sonner";
 import { track } from "@/lib/analytics";
 import { InfoTip } from "@/components/info-tip";
 import { announce } from "@/components/shell/announcer";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Badge } from "@workspace/ksap-cloud-ui/components/ui/badge";
+import { Button } from "@workspace/ksap-cloud-ui/components/ui/button";
+import { Input } from "@workspace/ksap-cloud-ui/components/ui/input";
+import { Label } from "@workspace/ksap-cloud-ui/components/ui/label";
+import { Switch } from "@workspace/ksap-cloud-ui/components/ui/switch";
 import {
   actionChanges,
   diffLines,
@@ -35,20 +35,13 @@ import {
   type CompareResult,
   type ExportRow,
 } from "@/lib/compare";
-import { cn } from "@/lib/utils";
+import { cn } from "@workspace/ksap-cloud-ui/lib/utils";
 
 /* ------------------------------------------------------------------- tabs */
 
 type Tab = "differences" | "changed" | "only-a" | "only-b" | "identical" | "all";
 
-const TAB_LABELS: Record<Tab, string> = {
-  differences: "All differences",
-  changed: "Changed",
-  "only-a": "Only in A",
-  "only-b": "Only in B",
-  identical: "Identical",
-  all: "All agents",
-};
+const TABS: Tab[] = ["differences", "changed", "only-a", "only-b", "identical", "all"];
 
 function tabCount(tab: Tab, r: CompareResult): number {
   switch (tab) {
@@ -86,27 +79,22 @@ function tabFilter(tab: Tab, status: AgentStatus): boolean {
 
 /* ------------------------------------------------------------------ badge */
 
-const STATUS_STYLE: Record<AgentStatus, string> = {
-  changed: "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  "only-a": "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-400",
-  "only-b": "border-violet-500/40 bg-violet-500/10 text-violet-700 dark:text-violet-400",
-  identical: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-};
+const STATUS_VARIANT = {
+  changed: "warning",
+  "only-a": "info",
+  "only-b": "neutral",
+  identical: "success",
+} as const satisfies Record<AgentStatus, StatusBadgeStatus>;
 
-function StatusBadge({ status, labelA, labelB }: { status: AgentStatus; labelA: string; labelB: string }) {
-  const meta: Record<AgentStatus, { icon: typeof Check; label: string }> = {
-    changed: { icon: PencilLine, label: "Changed" },
-    "only-a": { icon: ArrowLeft, label: `Only in ${labelA}` },
-    "only-b": { icon: ArrowDownUp, label: `Only in ${labelB}` },
-    identical: { icon: Check, label: "Identical" },
-  };
-  const { icon: Icon, label } = meta[status];
-  return (
-    <Badge variant="outline" className={cn("gap-1.5", STATUS_STYLE[status])}>
-      <Icon className="size-3" aria-hidden="true" />
-      {label}
-    </Badge>
-  );
+function AgentStatusBadge({ status, labelA, labelB }: { status: AgentStatus; labelA: string; labelB: string }) {
+  const { t } = useTranslation();
+  const label =
+    status === "changed"
+      ? t("compareResults.statusChanged")
+      : status === "identical"
+        ? t("compareResults.statusIdentical")
+        : t("compareResults.onlyIn", { label: status === "only-a" ? labelA : labelB });
+  return <StatusBadge status={STATUS_VARIANT[status]}>{label}</StatusBadge>;
 }
 
 function MiniBadge({
@@ -114,21 +102,18 @@ function MiniBadge({
 }: {
   status: "changed" | "added" | "removed" | "moved" | "only-a" | "only-b" | "identical";
 }) {
+  const { t } = useTranslation();
   const map = {
-    changed: { label: "changed", cls: "text-amber-600 border-amber-500/40 bg-amber-500/10" },
-    moved: { label: "moved", cls: "text-orange-600 border-orange-500/40 bg-orange-500/10" },
-    added: { label: "added", cls: "text-emerald-600 border-emerald-500/40 bg-emerald-500/10" },
-    removed: { label: "removed", cls: "text-rose-600 border-rose-500/40 bg-rose-500/10" },
-    "only-a": { label: "A only", cls: "text-sky-600 border-sky-500/40 bg-sky-500/10" },
-    "only-b": { label: "B only", cls: "text-violet-600 border-violet-500/40 bg-violet-500/10" },
-    identical: { label: "identical", cls: "text-muted-foreground" },
-  } as const;
+    changed: { label: t("compareResults.miniChanged"), variant: "warning" },
+    moved: { label: t("compareResults.miniMoved"), variant: "warning" },
+    added: { label: t("compareResults.miniAdded"), variant: "success" },
+    removed: { label: t("compareResults.miniRemoved"), variant: "danger" },
+    "only-a": { label: t("compareResults.miniOnlyA"), variant: "info" },
+    "only-b": { label: t("compareResults.miniOnlyB"), variant: "neutral" },
+    identical: { label: t("compareResults.miniIdentical"), variant: "neutral" },
+  } as const satisfies Record<string, { label: string; variant: StatusBadgeStatus }>;
   const m = map[status];
-  return (
-    <Badge variant="outline" className={cn("font-mono text-[10px] uppercase", m.cls)}>
-      {m.label}
-    </Badge>
-  );
+  return <StatusBadge status={m.variant}>{m.label}</StatusBadge>;
 }
 
 /* ------------------------------------------------------------- line diff */
@@ -136,17 +121,17 @@ function MiniBadge({
 function ParamDiff({ a, b }: { a: string; b: string }) {
   const lines = useMemo(() => diffLines(a, b), [a, b]);
   return (
-    <pre className="max-h-72 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-[11px] leading-5">
+    <pre className="max-h-72 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-caption leading-5">
       {lines.map((l, i) => (
         <div
           key={i}
           className={cn(
             "whitespace-pre-wrap break-all px-1",
-            l.type === "added" && "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
-            l.type === "removed" && "bg-rose-500/15 text-rose-800 dark:text-rose-300",
+            l.type === "added" && "bg-success-subtle text-success",
+            l.type === "removed" && "bg-danger-subtle text-danger",
           )}
         >
-          <span className="mr-2 inline-block w-3 select-none text-muted-foreground">
+          <span className="me-2 inline-block w-3 select-none text-muted-foreground">
             {l.type === "added" ? "+" : l.type === "removed" ? "−" : " "}
           </span>
           {l.text}
@@ -160,8 +145,8 @@ function DiffValue({ value, changed, side }: { value: string | null; changed: bo
   return (
     <td
       className={cn(
-        "max-w-[280px] whitespace-pre-wrap break-all px-3 py-1.5 align-top font-mono text-[11px]",
-        changed && (side === "a" ? "bg-rose-500/10" : "bg-emerald-500/10"),
+        "max-w-xs whitespace-pre-wrap break-all px-3 py-2 align-top font-mono text-caption",
+        changed && (side === "a" ? "bg-danger-subtle" : "bg-success-subtle"),
         value == null && "text-muted-foreground italic",
       )}
     >
@@ -201,20 +186,21 @@ function changeItems(cmp: AgentComparison): ChangeItem[] {
 /* ------------------------------------------------------------ references */
 
 function RefChips({ title, items, other, markDiffer }: { title: string; items: string[]; other: string[]; markDiffer: boolean }) {
+  const { t } = useTranslation();
   if (items.length === 0 && other.length === 0) return null;
   const otherNorm = new Set(other.map((s) => s.toUpperCase()));
   return (
     <div className="grid gap-1">
       <p className="text-caption text-muted-foreground">{title}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {items.length === 0 && <span className="text-caption text-muted-foreground italic">none</span>}
+      <div className="flex flex-wrap gap-2">
+        {items.length === 0 && <span className="text-caption text-muted-foreground italic">{t("compareResults.none")}</span>}
         {items.map((gid) => {
           const differs = markDiffer && !otherNorm.has(gid.toUpperCase());
           return (
             <Badge
               key={gid}
               variant="outline"
-              className={cn("font-mono text-[11px]", differs && "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400")}
+              className={cn("font-mono text-caption", differs && "border-warning bg-warning-subtle text-warning")}
             >
               {gid}
             </Badge>
@@ -240,18 +226,19 @@ function FieldRow({
   changeType: "added" | "removed" | "changed" | "same";
   id?: string;
 }) {
+  const { t } = useTranslation();
   const changed = changeType !== "same";
   const isLong = (valueA?.length ?? 0) > 80 || (valueB?.length ?? 0) > 80;
   const [open, setOpen] = useState(false);
   return (
     <tr id={id} className="border-b last:border-0">
-      <td className="w-40 shrink-0 px-3 py-1.5 align-top text-[12px] font-medium whitespace-nowrap">{field}</td>
+      <td className="w-40 shrink-0 px-3 py-2 align-top text-caption font-semibold whitespace-nowrap">{field}</td>
       {isLong && open ? (
-        <td colSpan={2} className="px-3 py-1.5">
+        <td colSpan={2} className="px-3 py-2">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-caption text-muted-foreground">Line-by-line diff</span>
+            <span className="text-caption text-muted-foreground">{t("compareResults.lineByLineDiff")}</span>
             <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
-              <ChevronUp className="size-3.5" aria-hidden="true" /> Collapse
+              <ChevronUp className="size-icon-sm" aria-hidden="true" />{" "}{t("compareResults.collapse")}
             </Button>
           </div>
           <ParamDiff a={valueA ?? ""} b={valueB ?? ""} />
@@ -263,16 +250,16 @@ function FieldRow({
         </>
       )}
       {!(isLong && open) && (
-        <td className="w-10 px-2 py-1.5 align-top">
+        <td className="w-10 px-2 py-2 align-top">
           {isLong && (
             <Button
               size="sm"
               variant="ghost"
               className="size-7 p-0"
-              aria-label={`Open line diff for ${field}`}
+              aria-label={t("compareResults.openLineDiff", { field })}
               onClick={() => setOpen(true)}
             >
-              <ChevronDown className="size-3.5" aria-hidden="true" />
+              <ChevronDown className="size-icon-sm" aria-hidden="true" />
             </Button>
           )}
         </td>
@@ -296,6 +283,7 @@ function AgentDetail({
   onSelectChange: (i: number) => void;
   single: boolean;
 }) {
+  const { t } = useTranslation();
   const items = useMemo(() => (cmp ? changeItems(cmp) : []), [cmp]);
 
   useEffect(() => {
@@ -305,8 +293,8 @@ function AgentDetail({
 
   if (!cmp) {
     return (
-      <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
-        Select an agent in the list to inspect its differences.
+      <div className="flex h-full items-center justify-center p-8 text-body text-muted-foreground">
+        {t("compareResults.selectAnAgentIn")}
       </div>
     );
   }
@@ -314,10 +302,10 @@ function AgentDetail({
   if (cmp.status === "identical") {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
-        <Check className="size-8 text-emerald-600" strokeWidth={1.5} aria-hidden="true" />
-        <p className="text-sm font-medium">{cmp.xid} is identical in both sources</p>
+        <Check className="size-icon-lg text-success" strokeWidth={1.5} aria-hidden="true" />
+        <p className="text-body font-semibold">{t("compareResults.xidIsIdenticalIn", { xid: cmp.xid })}</p>
         <p className="text-caption text-muted-foreground">
-          No header, event or action differences under the current options.
+          {t("compareResults.noHeaderEventOr")}
         </p>
       </div>
     );
@@ -335,10 +323,10 @@ function AgentDetail({
     return (
       <div className="flex h-full flex-col gap-5 overflow-auto p-4">
         <div>
-          <h4 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Header</h4>
-          <dl className="mt-1.5 grid gap-x-6 gap-y-1 sm:grid-cols-2">
+          <h4 className="text-caption font-semibold text-muted-foreground">{t("compareResults.header")}</h4>
+          <dl className="mt-2 grid gap-x-6 gap-y-1 sm:grid-cols-2">
             {Object.entries(agent.header).map(([k, v]) => (
-              <div key={k} className="flex gap-2 text-[12px]">
+              <div key={k} className="flex gap-2 text-caption">
                 <dt className="w-44 shrink-0 truncate font-mono text-muted-foreground">{k}</dt>
                 <dd className="min-w-0 break-all font-mono">{v || "—"}</dd>
               </div>
@@ -346,33 +334,33 @@ function AgentDetail({
           </dl>
         </div>
         <div>
-          <h4 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Events</h4>
-          <ul className="mt-1.5 grid gap-1.5">
+          <h4 className="text-caption font-semibold text-muted-foreground">{t("compareResults.events")}</h4>
+          <ul className="mt-2 grid gap-2">
             {agent.events.map((ev, i) => (
               <li key={i} className="rounded-md border px-3 py-2">
-                <p className="text-[12px] font-medium">{ev.eventGid}</p>
-                {ev.parameters && <p className="mt-0.5 break-all font-mono text-[11px] text-muted-foreground">{ev.parameters}</p>}
+                <p className="text-caption font-semibold">{ev.eventGid}</p>
+                {ev.parameters && <p className="mt-1 break-all font-mono text-caption text-muted-foreground">{ev.parameters}</p>}
               </li>
             ))}
-            {agent.events.length === 0 && <li className="text-caption text-muted-foreground italic">No events</li>}
+            {agent.events.length === 0 && <li className="text-caption text-muted-foreground italic">{t("compareResults.noEvents")}</li>}
           </ul>
         </div>
         <div>
-          <h4 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Actions</h4>
-          <div className="mt-1.5 grid gap-3">
+          <h4 className="text-caption font-semibold text-muted-foreground">{t("compareResults.actions")}</h4>
+          <div className="mt-2 grid gap-3">
             {Array.from(flows.entries()).map(([flow, actions]) => (
               <div key={flow} className="rounded-md border">
-                <p className="border-b bg-muted/40 px-3 py-1.5 font-mono text-[11px] font-semibold text-muted-foreground">
-                  Flow {flow}
+                <p className="border-b bg-muted/40 px-3 py-2 font-mono text-caption font-semibold text-muted-foreground">
+                  {t("compareResults.flowFlow", { flow })}
                 </p>
                 <ol className="grid">
                   {actions.map((ac, i) => (
-                    <li key={i} className="flex items-baseline gap-3 border-b px-3 py-1.5 last:border-0">
-                      <span className="w-8 shrink-0 font-mono text-[11px] text-muted-foreground">{ac.sequence}.</span>
+                    <li key={i} className="flex items-baseline gap-3 border-b px-3 py-2 last:border-0">
+                      <span className="w-8 shrink-0 font-mono text-caption text-muted-foreground">{ac.sequence}.</span>
                       <div className="min-w-0">
-                        <p className="text-[12px] font-medium">{ac.actionGid}</p>
+                        <p className="text-caption font-semibold">{ac.actionGid}</p>
                         {ac.parameters && (
-                          <p className="break-all font-mono text-[11px] text-muted-foreground">{ac.parameters}</p>
+                          <p className="break-all font-mono text-caption text-muted-foreground">{ac.parameters}</p>
                         )}
                       </div>
                     </li>
@@ -380,7 +368,7 @@ function AgentDetail({
                 </ol>
               </div>
             ))}
-            {agent.actions.length === 0 && <p className="text-caption text-muted-foreground italic">No actions</p>}
+            {agent.actions.length === 0 && <p className="text-caption text-muted-foreground italic">{t("compareResults.noActions")}</p>}
           </div>
         </div>
       </div>
@@ -391,17 +379,17 @@ function AgentDetail({
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2">
-        <span className="font-mono text-[13px] font-semibold">{cmp.xid}</span>
-        <StatusBadge status={cmp.status} labelA={labelA} labelB={labelB} />
-        <span className="ml-auto flex items-center gap-1 text-caption text-muted-foreground">
+        <span className="font-mono text-body font-semibold">{cmp.xid}</span>
+        <AgentStatusBadge status={cmp.status} labelA={labelA} labelB={labelB} />
+        <span className="ms-auto flex items-center gap-1 text-caption text-muted-foreground">
           <Button
             size="sm"
             variant="ghost"
-            aria-label="Previous change"
+            aria-label={t("compareResults.previousChange")}
             disabled={items.length === 0}
             onClick={() => onSelectChange((changeIndex - 1 + items.length) % items.length)}
           >
-            <SkipBack className="size-3.5" aria-hidden="true" /> Prev
+            <SkipBack className="size-icon-sm" aria-hidden="true" />{" "}{t("compareResults.prev")}
           </Button>
           <span className="tabular-nums">
             {items.length === 0 ? 0 : changeIndex + 1}/{items.length}
@@ -409,11 +397,11 @@ function AgentDetail({
           <Button
             size="sm"
             variant="ghost"
-            aria-label="Next change"
+            aria-label={t("compareResults.nextChange")}
             disabled={items.length === 0}
             onClick={() => onSelectChange((changeIndex + 1) % items.length)}
           >
-            Next <SkipForward className="size-3.5" aria-hidden="true" />
+            {t("compareResults.next")}{" "}<SkipForward className="size-icon-sm" aria-hidden="true" />
           </Button>
         </span>
       </div>
@@ -421,15 +409,15 @@ function AgentDetail({
       <div className="flex-1 overflow-auto p-4">
         <div className="grid gap-5">
           {/* Header section */}
-          <section aria-label="Header differences">
-            <h4 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Header</h4>
-            <div className="mt-1.5 overflow-hidden rounded-md border">
-              <table className="w-full border-collapse text-left">
+          <section aria-label={t("compareResults.headerDifferences")}>
+            <h4 className="text-caption font-semibold text-muted-foreground">{t("compareResults.header")}</h4>
+            <div className="mt-2 overflow-hidden rounded-md border">
+              <table className="w-full border-collapse text-start">
                 <thead>
                   <tr className="border-b bg-muted/40 text-caption text-muted-foreground">
-                    <th className="px-3 py-1.5 font-medium">Field</th>
-                    <th className="px-3 py-1.5 font-medium">A</th>
-                    <th className="px-3 py-1.5 font-medium">B</th>
+                    <th className="px-3 py-2 font-semibold">{t("compareResults.field")}</th>
+                    <th className="px-3 py-2 font-semibold">{t("compareResults.a")}</th>
+                    <th className="px-3 py-2 font-semibold">{t("compareResults.b")}</th>
                     <th />
                   </tr>
                 </thead>
@@ -437,7 +425,7 @@ function AgentDetail({
                   {cmp.status === "changed" && cmp.headerDiffs.length === 0 && (
                     <tr>
                       <td colSpan={4} className="px-3 py-2 text-caption text-muted-foreground italic">
-                        No header differences
+                        {t("compareResults.noHeaderDifferences")}
                       </td>
                     </tr>
                   )}
@@ -468,20 +456,20 @@ function AgentDetail({
           </section>
 
           {/* Events section */}
-          <section aria-label="Event differences">
-            <h4 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">Events</h4>
-            <div className="mt-1.5 grid gap-2">
+          <section aria-label={t("compareResults.eventDifferences")}>
+            <h4 className="text-caption font-semibold text-muted-foreground">{t("compareResults.events")}</h4>
+            <div className="mt-2 grid gap-2">
               {cmp.eventDiffs.length === 0 && (
-                <p className="text-caption text-muted-foreground italic">No events in either source</p>
+                <p className="text-caption text-muted-foreground italic">{t("compareResults.noEventsInEither")}</p>
               )}
               {cmp.eventDiffs.map((ev, i) => (
                 <div key={`${ev.eventGid}-${i}`} id={`chg-ev-${i}`} className="overflow-hidden rounded-md border">
-                  <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
-                    <span className="font-mono text-[12px] font-medium">{ev.eventGid}</span>
+                  <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-2">
+                    <span className="font-mono text-caption font-semibold">{ev.eventGid}</span>
                     <MiniBadge status={ev.status} />
                   </div>
                   {ev.status !== "identical" && (
-                    <table className="w-full border-collapse text-left">
+                    <table className="w-full border-collapse text-start">
                       <tbody>
                         {ev.fields.map((d) => (
                           <FieldRow
@@ -501,28 +489,28 @@ function AgentDetail({
           </section>
 
           {/* Actions section */}
-          <section aria-label="Action differences">
-            <h4 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">
-              Actions
+          <section aria-label={t("compareResults.actionDifferences")}>
+            <h4 className="text-caption font-semibold text-muted-foreground">
+              {t("compareResults.actions")}
             </h4>
-            <div className="mt-1.5 grid gap-2">
+            <div className="mt-2 grid gap-2">
               {cmp.actionDiffs.length === 0 && (
-                <p className="text-caption text-muted-foreground italic">No actions in either source</p>
+                <p className="text-caption text-muted-foreground italic">{t("compareResults.noActionsInEither")}</p>
               )}
               {cmp.actionDiffs.map((ac, i) => {
                 const pos = (f: number | null, s: number | null) =>
                   f == null ? "—" : `F${f}/S${s}`;
                 return (
                   <div key={`${ac.actionGid}-${i}`} id={`chg-ac-${i}`} className="overflow-hidden rounded-md border">
-                    <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
-                      <span className="font-mono text-[12px] font-medium">{ac.actionGid}</span>
-                      <span className="font-mono text-[11px] text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-3 py-2">
+                      <span className="font-mono text-caption font-semibold">{ac.actionGid}</span>
+                      <span className="font-mono text-caption text-muted-foreground">
                         {pos(ac.flowA, ac.sequenceA)} → {pos(ac.flowB, ac.sequenceB)}
                       </span>
                       <MiniBadge status={ac.status} />
                     </div>
                     {ac.status !== "identical" && ac.fields.length > 0 && (
-                      <table className="w-full border-collapse text-left">
+                      <table className="w-full border-collapse text-start">
                         <tbody>
                           {ac.fields.map((d) => (
                             <FieldRow
@@ -543,18 +531,18 @@ function AgentDetail({
           </section>
 
           {/* References */}
-          <section aria-label="References">
-            <h4 className="text-caption font-semibold tracking-wide text-muted-foreground uppercase">References</h4>
-            <div className="mt-1.5 grid gap-3 rounded-md border p-3 sm:grid-cols-2">
+          <section aria-label={t("compareResults.references")}>
+            <h4 className="text-caption font-semibold text-muted-foreground">{t("compareResults.references")}</h4>
+            <div className="mt-2 grid gap-3 rounded-md border p-3 sm:grid-cols-2">
               <div className="grid gap-2">
                 <RefChips
-                  title={`Saved conditions in ${labelA}`}
+                  title={t("compareResults.savedConditionsIn", { label: labelA })}
                   items={cmp.conditionsA}
                   other={cmp.conditionsB}
                   markDiffer={cmp.status === "changed"}
                 />
                 <RefChips
-                  title={`Saved queries in ${labelA}`}
+                  title={t("compareResults.savedQueriesIn", { label: labelA })}
                   items={cmp.queriesA}
                   other={cmp.queriesB}
                   markDiffer={cmp.status === "changed"}
@@ -562,13 +550,13 @@ function AgentDetail({
               </div>
               <div className="grid gap-2">
                 <RefChips
-                  title={`Saved conditions in ${labelB}`}
+                  title={t("compareResults.savedConditionsIn", { label: labelB })}
                   items={cmp.conditionsB}
                   other={cmp.conditionsA}
                   markDiffer={cmp.status === "changed"}
                 />
                 <RefChips
-                  title={`Saved queries in ${labelB}`}
+                  title={t("compareResults.savedQueriesIn", { label: labelB })}
                   items={cmp.queriesB}
                   other={cmp.queriesA}
                   markDiffer={cmp.status === "changed"}
@@ -610,6 +598,7 @@ function toSpreadsheetXml(rows: ExportRow[]): string {
 }
 
 export function CompareResults({ result, onBack }: { result: CompareResult; onBack: () => void }) {
+  const { t } = useTranslation();
   const { labelA, labelB } = result;
   const [tab, setTab] = useState<Tab>("differences");
   const [search, setSearch] = useState("");
@@ -617,8 +606,6 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [changeIndex, setChangeIndex] = useState(0);
   const [single, setSingle] = useState(false);
-  const [split, setSplit] = useState(52);
-  const dragState = useRef<{ startY: number; startPct: number } | null>(null);
 
   const rows = useMemo(() => {
     return result.agents.filter((a) => tabFilter(tab, a.status));
@@ -639,7 +626,7 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
       const activeB = a.agentB?.header.IS_ACTIVE ?? "";
       const activeText = activeA === activeB ? activeA : `${activeA} ${activeB}`;
       const statusText =
-        a.status === "only-a" ? `only in ${labelA}` : a.status === "only-b" ? `only in ${labelB}` : a.status;
+        a.status === "only-a" ? t("compareResults.onlyIn", { label: labelA }) : a.status === "only-b" ? t("compareResults.onlyIn", { label: labelB }) : a.status === "changed" ? t("compareResults.statusChanged") : t("compareResults.statusIdentical");
       if (cf.xid && !a.xid.toLowerCase().includes(cf.xid)) return false;
       if (cf.query && !`${qa} ${qb}`.toLowerCase().includes(cf.query)) return false;
       if (cf.active && !activeText.toLowerCase().includes(cf.active)) return false;
@@ -679,29 +666,10 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
     return () => window.removeEventListener("keydown", onKey);
   }, [selected]);
 
-  const onDragStart = (e: React.MouseEvent) => {
-    dragState.current = { startY: e.clientY, startPct: split };
-    const onMove = (ev: MouseEvent) => {
-      const d = dragState.current;
-      if (!d) return;
-      const host = document.getElementById("agents-split");
-      if (!host) return;
-      const dy = ((ev.clientY - d.startY) / host.clientHeight) * 100;
-      setSplit(Math.min(80, Math.max(20, d.startPct + dy)));
-    };
-    const onUp = () => {
-      dragState.current = null;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  };
-
   const exportAll = useCallback(() => {
     const rowsAll = result.agents.filter((a) => a.status !== "identical").flatMap(exportRows);
     if (rowsAll.length === 0) {
-      toast.info("No differences to export");
+      toast.info(t("compareResults.noDifferencesToExport"));
       return;
     }
     const stem = `agent-differences-${labelA}-vs-${labelB}`;
@@ -712,89 +680,94 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
     const data = exportAll();
     if (!data) return;
     download(`${data.stem}.csv`, toCsv(data.rowsAll), "text/csv");
-    toast.success(`Exported ${data.rowsAll.length} differences to CSV`);
+    toast.success(t("compareResults.exportedCsv", { count: data.rowsAll.length }));
     track("agents_exported", data.rowsAll.length, { format: "csv" });
-    announce(`Exported ${data.rowsAll.length} differences to CSV`);
+    announce(t("compareResults.exportedCsv", { count: data.rowsAll.length }));
   };
 
   const exportExcel = () => {
     const data = exportAll();
     if (!data) return;
     download(`${data.stem}.xls`, toSpreadsheetXml(data.rowsAll), "application/vnd.ms-excel;charset=utf-8");
-    toast.success(`Exported ${data.rowsAll.length} differences to Excel`);
+    toast.success(t("compareResults.exportedExcel", { count: data.rowsAll.length }));
     track("agents_exported", data.rowsAll.length, { format: "xlsx" });
-    announce(`Exported ${data.rowsAll.length} differences to Excel`);
+    announce(t("compareResults.exportedExcel", { count: data.rowsAll.length }));
   };
 
   const copySummary = async () => {
     const text = summaryText(result);
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Summary copied to clipboard");
+      toast.success(t("compareResults.summaryCopiedToClipboard"));
       track("agents_summary_copied", result.counts.differences);
-      announce(`Summary copied: ${result.counts.differences} differences`);
+      announce(t("compareResults.summaryCopiedCount", { count: result.counts.differences }));
     } catch {
       // Clipboard can be unavailable (permissions); show the text instead.
-      toast.info("Clipboard unavailable — summary shown in console", { description: text.slice(0, 200) });
+      toast.info(t("compareResults.clipboardUnavailableSummaryShown"), { description: text.slice(0, 200) });
       console.log(text);
     }
   };
 
+  const tabLabel = (id: Tab) =>
+    id === "only-a" || id === "only-b"
+      ? t("compareResults.onlyIn", { label: id === "only-a" ? labelA : labelB })
+      : t(`compareResults.tabs.${id}`);
+
   const strip: { tab: Tab; label: string; value: number }[] = [
-    { tab: "changed", label: "Changed", value: result.counts.changed },
-    { tab: "only-a", label: `Only in ${labelA}`, value: result.counts.onlyA },
-    { tab: "only-b", label: `Only in ${labelB}`, value: result.counts.onlyB },
-    { tab: "identical", label: "Identical", value: result.counts.identical },
+    { tab: "changed", label: t("compareResults.labelChanged"), value: result.counts.changed },
+    { tab: "only-a", label: t("compareResults.onlyIn", { label: labelA }), value: result.counts.onlyA },
+    { tab: "only-b", label: t("compareResults.onlyIn", { label: labelB }), value: result.counts.onlyB },
+    { tab: "identical", label: t("compareResults.labelIdentical"), value: result.counts.identical },
   ];
 
   return (
     <div className="flex flex-col gap-4">
       {result.duplicates.length > 0 && (
-        <p role="alert" className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
-          {result.duplicates.length} agent(s) share a match key with another agent in the same source and were skipped:{" "}
-          <span className="font-mono">{result.duplicates.map((d) => `${d.source}:${d.key}`).join(", ")}</span>. Try matching by GID.
+        <p role="alert" className="rounded-md border border-warning bg-warning-subtle px-3 py-2 text-body">
+          {t("compareResults.lengthAgentSShare", { length: result.duplicates.length })}{" "}
+          <span className="font-mono">{result.duplicates.map((d) => `${d.source}:${d.key}`).join(", ")}</span>{t("compareResults.tryMatchingByGid")}
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3">
         <Button size="sm" variant="ghost" onClick={onBack}>
-          <ChevronRight className="size-4 rotate-180" aria-hidden="true" /> Back to review
+          <ChevronRight className="size-icon-sm rotate-180" aria-hidden="true" />{" "}{t("compareResults.backToReview")}
         </Button>
-        <span className="text-sm text-muted-foreground">
-          <span className="font-mono font-medium text-foreground">{labelA}</span>
+        <span className="text-body text-muted-foreground">
+          <span className="font-mono font-semibold text-foreground">{labelA}</span>
           {" vs "}
-          <span className="font-mono font-medium text-foreground">{labelB}</span>
+          <span className="font-mono font-semibold text-foreground">{labelB}</span>
         </span>
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="ms-auto flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" onClick={copySummary} data-testid="agents-copy-summary">
-            <ClipboardCopy className="size-3.5" aria-hidden="true" /> Copy summary
+            <ClipboardCopy className="size-icon-sm" aria-hidden="true" />{" "}{t("compareResults.copySummary")}
           </Button>
           <Button size="sm" variant="outline" onClick={exportCsv} data-testid="agents-export-csv">
-            <Download className="size-3.5" aria-hidden="true" /> CSV
+            <Download className="size-icon-sm" aria-hidden="true" />{" "}{t("compareResults.csv")}
           </Button>
           <Button size="sm" variant="outline" onClick={exportExcel} data-testid="agents-export-xlsx">
-            <FileSpreadsheet className="size-3.5" aria-hidden="true" /> Excel
+            <FileSpreadsheet className="size-icon-sm" aria-hidden="true" />{" "}{t("compareResults.excel")}
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm" role="status">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-4 py-3 text-body" role="status">
         {result.counts.differences === 0 ? (
-          <span>No differences between <b>{labelA}</b> and <b>{labelB}</b> under the current options.</span>
+          <span>{t("compareResults.noDifferencesBetween")}{" "}<b>{labelA}</b>{" "}{t("compareResults.and")}{" "}<b>{labelB}</b>{" "}{t("compareResults.underTheCurrentOptions")}</span>
         ) : (
           <span>
-            <b>{result.counts.differences}</b> of {result.agents.length} agents differ between <b>{labelA}</b> and <b>{labelB}</b>.
-            {" "}Select a row to see exactly what changed; identical agents are hidden by default.
+            <b>{result.counts.differences}</b>{" "}{t("compareResults.ofLengthAgentsDiffer", { length: result.agents.length })}{" "}<b>{labelA}</b>{" "}{t("compareResults.and")}{" "}<b>{labelB}</b>.
+            {" "}{t("compareResults.selectARowTo")}
           </span>
         )}
         <InfoTip
-          text="Changed = on both sides with different header, events or actions. Only in X = exists on just one side. Identical = same under your Options (footprint columns are ignored by default)."
+          text={t("compareResults.statusLegend")}
           ask="Give me a summary"
-          label="What do these statuses mean?"
+          label={t("compareResults.whatDoTheseStatuses")}
         />
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" role="group" aria-label="Summary">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4" role="group" aria-label={t("compareResults.summary")}>
         {strip.map((s) => (
           <button
             key={s.tab}
@@ -803,88 +776,88 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
             aria-pressed={tab === s.tab}
             data-testid={`agents-strip-${s.tab}`}
             className={cn(
-              "rounded-lg border px-4 py-3 text-left transition-colors",
+              "rounded-lg border px-4 py-3 text-start transition-colors",
               tab === s.tab ? "border-primary bg-primary/5" : "bg-card hover:border-primary/50",
             )}
           >
             <p className="text-caption text-muted-foreground">{s.label}</p>
-            <p className="text-2xl font-semibold tabular-nums">{s.value}</p>
+            <p className="text-title font-semibold tabular-nums">{s.value}</p>
           </button>
         ))}
       </div>
 
       {/* Tabs + search */}
       <div className="flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Result filters" className="flex flex-wrap gap-1">
-          {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
+        <div role="tablist" aria-label={t("compareResults.resultFilters")} className="flex flex-wrap gap-1">
+          {TABS.map((tabId) => (
             <button
-              key={t}
+              key={tabId}
               role="tab"
-              aria-selected={tab === t}
-              onClick={() => startTransition(() => setTab(t))}
-              data-testid={`agents-tab-${t}`}
+              aria-selected={tab === tabId}
+              onClick={() => startTransition(() => setTab(tabId))}
+              data-testid={`agents-tab-${tabId}`}
               className={cn(
-                "rounded-md px-3 py-1.5 text-sm transition-colors",
-                tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent",
+                "rounded-md px-3 py-2 text-body transition-colors",
+                tab === tabId ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent",
               )}
             >
-              {t === "only-a" ? `Only in ${labelA}` : t === "only-b" ? `Only in ${labelB}` : TAB_LABELS[t]}
-              <span className="ml-1.5 text-caption tabular-nums opacity-70">{tabCount(t, result)}</span>
+              {tabLabel(tabId)}
+              <span className="ms-2 text-caption tabular-nums opacity-70">{tabCount(tabId, result)}</span>
             </button>
           ))}
         </div>
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search agents…"
-          aria-label="Search agents"
-          className="ml-auto h-8 w-52"
+          placeholder={t("compareResults.searchAgents")}
+          aria-label={t("compareResults.searchAgents2")}
+          className="ms-auto h-8 w-52"
         />
       </div>
 
       {/* Resizable split: list top, detail bottom */}
-      <div id="agents-split" className="flex flex-col rounded-lg border bg-card" style={{ height: 780 }}>
-        <div className="overflow-auto" style={{ height: `${split}%` }}>
-          <div className="min-w-[680px]">
-          <table className="w-full border-collapse text-left text-sm">
+      <ResizablePanelGroup direction="vertical" className="h-dvh max-h-table rounded-lg border bg-card">
+        <ResizablePanel defaultSize={52} minSize={20} maxSize={80} className="overflow-auto">
+          <div className="min-w-max">
+          <table className="w-full border-collapse text-start text-body">
             <thead className="sticky top-0 bg-card">
               <tr className="border-b text-caption text-muted-foreground">
-                <th className="px-2 py-2 font-medium">
+                <th className="px-2 py-2 font-semibold">
                   <Input
                     value={colFilter.xid}
                     onChange={(e) => setColFilter({ ...colFilter, xid: e.target.value })}
-                    placeholder="Agent XID"
-                    aria-label="Filter by agent XID"
-                    className="h-6 w-24 border-none bg-transparent px-1 text-caption shadow-none focus-visible:ring-0"
+                    placeholder={t("compareResults.agentXid")}
+                    aria-label={t("compareResults.filterByAgentXid")}
+                    className="h-6 w-24 border-none bg-transparent px-1 text-caption focus-visible:ring-0"
                   />
                 </th>
-                <th className="px-2 py-2 font-medium">
+                <th className="px-2 py-2 font-semibold">
                   <Input
                     value={colFilter.query}
                     onChange={(e) => setColFilter({ ...colFilter, query: e.target.value })}
-                    placeholder="Data query type"
-                    aria-label="Filter by data query type"
-                    className="h-6 w-20 border-none bg-transparent px-1 text-caption shadow-none focus-visible:ring-0"
+                    placeholder={t("compareResults.dataQueryType")}
+                    aria-label={t("compareResults.filterByDataQuery")}
+                    className="h-6 w-20 border-none bg-transparent px-1 text-caption focus-visible:ring-0"
                   />
                 </th>
-                <th className="px-2 py-2 font-medium">
+                <th className="px-2 py-2 font-semibold">
                   <Input
                     value={colFilter.active}
                     onChange={(e) => setColFilter({ ...colFilter, active: e.target.value })}
-                    placeholder="Active (A / B)"
-                    aria-label="Filter by active state"
-                    className="h-6 w-20 border-none bg-transparent px-1 text-caption shadow-none focus-visible:ring-0"
+                    placeholder={t("compareResults.activeAB")}
+                    aria-label={t("compareResults.filterByActiveState")}
+                    className="h-6 w-20 border-none bg-transparent px-1 text-caption focus-visible:ring-0"
                   />
                 </th>
-                <th className="px-2 py-2 text-right font-medium">Events changed <InfoTip text="Number of events (the triggers that fire the agent) that were added, removed or edited." label="About events" /></th>
-                <th className="px-2 py-2 text-right font-medium">Actions changed <InfoTip text="Number of actions (what the agent does, in flow/sequence order) that were added, removed, moved or edited." ask="What does moved mean?" label="About actions" /></th>
-                <th className="px-2 py-2 font-medium">
+                <th className="px-2 py-2 text-end font-semibold">{t("compareResults.eventsChanged")}{" "}<InfoTip text={t("compareResults.tipEvents")} label={t("compareResults.aboutEvents")} /></th>
+                <th className="px-2 py-2 text-end font-semibold">{t("compareResults.actionsChanged")}{" "}<InfoTip text={t("compareResults.tipActions")} ask={t("compareResults.askMoved")} label={t("compareResults.aboutActions")} /></th>
+                <th className="px-2 py-2 font-semibold">
                   <Input
                     value={colFilter.status}
                     onChange={(e) => setColFilter({ ...colFilter, status: e.target.value })}
-                    placeholder="Status"
-                    aria-label="Filter by status"
-                    className="h-6 w-24 border-none bg-transparent px-1 text-caption shadow-none focus-visible:ring-0"
+                    placeholder={t("compareResults.status")}
+                    aria-label={t("compareResults.filterByStatus")}
+                    className="h-6 w-24 border-none bg-transparent px-1 text-caption focus-visible:ring-0"
                   />
                 </th>
               </tr>
@@ -899,7 +872,7 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
                 const ac = actionChanges(a);
                 const isSel = selected?.key === a.key;
                 return (
-                  <ViewTransition key={a.key}>
+                  <Fragment key={a.key}>
                   <tr
 
                     onClick={() => setSelectedKey(a.key)}
@@ -910,63 +883,55 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
                       isSel ? "bg-primary/5" : "hover:bg-muted/40",
                     )}
                   >
-                    <td className="px-2 py-2 font-mono text-[12px] font-medium">{a.xid}</td>
-                    <td className="px-2 py-2 font-mono text-[11px]">
+                    <td className="px-2 py-2 font-mono text-caption font-semibold">{a.xid}</td>
+                    <td className="px-2 py-2 font-mono text-caption">
                       {qa ?? "—"}
                       {qa !== qb && qb != null && <span className="text-muted-foreground"> → {qb}</span>}
-                      {qb == null && qa != null && a.agentB && <span className="text-muted-foreground"> (no col)</span>}
+                      {qb == null && qa != null && a.agentB && <span className="text-muted-foreground">{t("compareResults.noCol")}</span>}
                     </td>
-                    <td className="px-2 py-2 font-mono text-[11px]">
+                    <td className="px-2 py-2 font-mono text-caption">
                       {aa ?? "—"}
                       {aa !== ab && <span className="text-muted-foreground"> → {ab ?? "—"}</span>}
                     </td>
-                    <td className="px-2 py-2 text-right tabular-nums">{ec}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{ac}</td>
+                    <td className="px-2 py-2 text-end tabular-nums">{ec}</td>
+                    <td className="px-2 py-2 text-end tabular-nums">{ac}</td>
                     <td className="px-2 py-2">
-                      <StatusBadge status={a.status} labelA={labelA} labelB={labelB} />
+                      <AgentStatusBadge status={a.status} labelA={labelA} labelB={labelB} />
                     </td>
                   </tr>
-                  </ViewTransition>
+                  </Fragment>
                 );
               })}
               {visible.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-3 py-8 text-center text-caption text-muted-foreground">
-                    No agents match the current filters.
+                    {t("compareResults.noAgentsMatchThe")}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
           </div>
-        </div>
+        </ResizablePanel>
 
-        {/* drag handle */}
-        <div
-          role="separator"
-          aria-orientation="horizontal"
-          aria-label="Resize detail panel"
-          onMouseDown={onDragStart}
-          className="flex h-2 cursor-row-resize items-center justify-center border-y bg-muted/30 hover:bg-primary/20"
-        >
-          <div className="h-0.5 w-10 rounded bg-muted-foreground/40" />
-        </div>
+        <ResizableHandle withHandle aria-label={t("compareResults.resizeDetailPanel")} />
 
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 border-b px-4 py-1.5">
+        <ResizablePanel defaultSize={48} minSize={20} className="overflow-auto">
+        <div className="flex min-h-full flex-col">
+          <div className="flex items-center gap-2 border-b px-4 py-2">
             <Label htmlFor="agents-single-view" className="text-caption text-muted-foreground">
-              Single agent view
+              {t("compareResults.singleAgentView")}
             </Label>
-            <InfoTip text="Show one agent's full structure (events, then actions by flow) instead of only its differences." label="About single agent view" />
+            <InfoTip text={t("compareResults.tipSingle")} label={t("compareResults.aboutSingleAgentView")} />
             <Switch
               id="agents-single-view"
               checked={single}
               onCheckedChange={setSingle}
               data-testid="agents-single-toggle"
             />
-            <span className="ml-auto hidden items-center gap-1 text-caption text-muted-foreground sm:flex">
-              <Equal className="size-3" aria-hidden="true" /> Press <kbd className="rounded border px-1">J</kbd>/
-              <kbd className="rounded border px-1">K</kbd> to move between changes
+            <span className="ms-auto hidden items-center gap-1 text-caption text-muted-foreground sm:flex">
+              <Equal className="size-icon-sm" aria-hidden="true" />{" "}
+              <Trans i18nKey="compareResults.pressJk" components={{ j: <Kbd />, k: <Kbd /> }} />
             </span>
           </div>
           <AgentDetail
@@ -978,7 +943,8 @@ export function CompareResults({ result, onBack }: { result: CompareResult; onBa
             single={single}
           />
         </div>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

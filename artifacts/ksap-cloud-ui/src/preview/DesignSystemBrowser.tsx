@@ -56,7 +56,7 @@ export function DesignSystemBrowser() {
     </nav>
     <div>
       <header className="ksap-toolbar">
-        <div><p className="text-caption text-muted-foreground">KSAP Cloud UI</p><p className="text-subheading font-semibold">Component pilot</p></div>
+        <div><p className="text-caption text-muted-foreground">KSAP Cloud UI</p><p className="text-subheading font-semibold">Shared component library</p></div>
         <div className="ksap-controls">
           <label className="ksap-control-label">Theme<select className="ksap-select" value={display.theme} onChange={e => updateDisplay({ theme: e.target.value as DisplayPreferences["theme"] })}><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
           <label className="ksap-control-label">Palette<select className="ksap-select" value={display.palette} onChange={e => updateDisplay({ palette: e.target.value as DisplayPreferences["palette"] })}><option value="blue">Blue</option><option value="red">Red</option><option value="green">Green</option><option value="yellow">Yellow</option></select></label>

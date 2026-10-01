@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { PageHeader } from "@workspace/ksap-cloud-ui/components/patterns/page-header";
 import { useEffect } from "react";
 import { useSearchParams } from "@/lib/router";
 import { ListTool } from "@/components/list/list-tool";
@@ -5,7 +7,8 @@ import { useActivity } from "@/hooks/use-activity";
 import { useListTool } from "@/state/list-tool";
 
 export default function ListPage() {
-  useActivity("tool", "List Utility", "/list");
+  const { t } = useTranslation();
+  useActivity("tool", t("nav.listUtility"), "/list");
   const { consumeDraft, loadSampleIfEmpty } = useListTool();
   const [searchParams] = useSearchParams();
 
@@ -18,13 +21,11 @@ export default function ListPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <header className="mb-6">
-        <h1 className="text-[22px] font-semibold tracking-tight">List Utility</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Clean pasted value lists, remove duplicates, chunk them for SQL IN lists and copy the result. Options
-          are remembered; content never leaves this browser.
-        </p>
-      </header>
+      <PageHeader
+        className="mb-6"
+        title={t("list.listUtility")}
+        description={t("list.cleanPastedValueLists")}
+      />
       <ListTool variant="page" />
     </div>
   );

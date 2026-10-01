@@ -1,21 +1,24 @@
+import { useTranslation } from "react-i18next";
+import { Button } from "@workspace/ksap-cloud-ui/components/ui/button";
+import { PageHeader } from "@workspace/ksap-cloud-ui/components/patterns/page-header";
 import { AgentImportFlow } from "@/components/agents/import-flow";
 import { useActivity } from "@/hooks/use-activity";
 
 export default function AgentsPage() {
-  useActivity("tool", "Agent Compare", "/agents");
+  const { t } = useTranslation();
+  useActivity("tool", t("nav.agentCompare"), "/agents");
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
-      <div className="flex items-center gap-3">
-        <h1 className="text-[22px] font-semibold tracking-tight">Agent Compare</h1>
-        <button type="button" onClick={() => window.dispatchEvent(new Event("catalyst:tour"))} className="text-caption text-primary hover:underline">
-          Take a tour
-        </button>
-      </div>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Compare automation agents between two extracts — for example DEV and PROD — and review every added,
-        removed and changed event and action.
-      </p>
+      <PageHeader
+        title={t("agents.agentCompare")}
+        description={t("agents.compareAutomationAgentsBetween")}
+        action={
+          <Button variant="outline" onClick={() => window.dispatchEvent(new Event("catalyst:tour"))}>
+            {t("agents.takeATour")}
+          </Button>
+        }
+      />
 
       <div className="mt-8">
         <AgentImportFlow />

@@ -6,6 +6,7 @@
  * Produces one model per agent with events and actions sorted by
  * ACTION_FLOW then ACTION_SEQUENCE.
  */
+import { tr } from "@/lib/tr";
 
 export type AgentTable = "AGENT" | "AGENT_EVENT_DETAILS" | "AGENT_ACTION_DETAILS";
 
@@ -161,7 +162,7 @@ export function parseCsv(
         file,
         line: rowStartLine,
         kind: "unknown-column",
-        message: `Row has ${row.length} fields; expected ${columns.length}.`,
+        message: tr("parse.rowFields", { found: row.length, expected: columns.length }),
       });
     }
     row = [];
@@ -213,7 +214,7 @@ export function parseCsv(
     i += 1;
   }
   if (inQuotes) {
-    warnings.push({ file, line: curLine, kind: "malformed-quotes", message: "Unterminated quoted field." });
+    warnings.push({ file, line: curLine, kind: "malformed-quotes", message: tr("parse.unterminated") });
     endRow();
   } else if (current !== "" || row.length > 0) {
     endRow();
@@ -293,7 +294,7 @@ export function buildSource(label: string, inputs: { name: string; text: string 
     const sniffed = sniffCsvTable(input.text);
     if (!sniffed || sniffed.columns.length === 0) {
       files.push({ file: input.name, table: null, format: "csv", rows: 0 });
-      warnings.push({ file: input.name, line: 1, kind: "unknown-column", message: "Empty or unrecognised CSV file." });
+      warnings.push({ file: input.name, line: 1, kind: "unknown-column", message: tr("parse.emptyCsv") });
       continue;
     }
     const table = sniffed.table ?? TABLE_BY_HEADER[sniffed.columns[0]] ?? guessTableByColumns(sniffed.columns);
@@ -315,7 +316,7 @@ export function buildSource(label: string, inputs: { name: string; text: string 
             file: input.name,
             line: headerIndex + 1,
             kind: "unknown-column",
-            message: `Unknown column "${col.trim()}" for ${table}.`,
+            message: tr("parse.unknownColumn", { column: col.trim(), table }),
           });
         }
       }
@@ -324,7 +325,7 @@ export function buildSource(label: string, inputs: { name: string; text: string 
         file: input.name,
         line: headerIndex + 1,
         kind: "unknown-column",
-        message: "Could not determine table from the header.",
+        message: tr("parse.noTable"),
       });
     }
 
@@ -347,7 +348,7 @@ export function buildSource(label: string, inputs: { name: string; text: string 
   for (const r of agentRows) {
     const gid = r.values.AGENT_GID?.trim();
     if (!gid) {
-      warnings.push({ file: r.file, line: r.line, kind: "orphan-row", message: "AGENT row without AGENT_GID." });
+      warnings.push({ file: r.file, line: r.line, kind: "orphan-row", message: tr("parse.agentNoGid") });
       continue;
     }
     const rec = getAgent(gid, r.values.AGENT_XID?.trim() ?? "");
@@ -367,7 +368,7 @@ export function buildSource(label: string, inputs: { name: string; text: string 
         file: r.file,
         line: r.line,
         kind: "orphan-row",
-        message: `Event "${r.values.AGENT_EVENT_GID ?? ""}" has no matching AGENT row (AGENT_GID ${gid || "(blank)"}).`,
+        message: tr("parse.eventOrphan", { gid: r.values.AGENT_EVENT_GID ?? "", agent: gid || tr("parse.blank") }),
       });
       continue;
     }
@@ -386,7 +387,7 @@ export function buildSource(label: string, inputs: { name: string; text: string 
         file: r.file,
         line: r.line,
         kind: "orphan-row",
-        message: `Action "${r.values.AGENT_ACTION_GID ?? ""}" has no matching AGENT row (AGENT_GID ${gid || "(blank)"}).`,
+        message: tr("parse.actionOrphan", { gid: r.values.AGENT_ACTION_GID ?? "", agent: gid || tr("parse.blank") }),
       });
       continue;
     }
@@ -469,7 +470,7 @@ function parseDbXml(
   }
 
   if (agentsFound === 0) {
-    warnings.push({ file: name, line: 1, kind: "unknown-column", message: "XML parse failed or no AGENT elements found." });
+    warnings.push({ file: name, line: 1, kind: "unknown-column", message: tr("parse.xmlFailed") });
     files.push({ file: name, table: null, format: "dbxml", rows: 0 });
     return files;
   }

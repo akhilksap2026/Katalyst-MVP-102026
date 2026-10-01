@@ -1,20 +1,22 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Building2, Globe, Lock, Plus, ShieldAlert, ShieldCheck, Unplug, User } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@workspace/ksap-cloud-ui/components/ui/sonner";
 import { track } from "@/lib/analytics";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { StatusBadge, type StatusBadgeStatus } from "@workspace/ksap-cloud-ui/components/patterns/status-badge";
+import { Badge } from "@workspace/ksap-cloud-ui/components/ui/badge";
+import { Button } from "@workspace/ksap-cloud-ui/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@workspace/ksap-cloud-ui/components/ui/dialog";
+import { Input } from "@workspace/ksap-cloud-ui/components/ui/input";
+import { Label } from "@workspace/ksap-cloud-ui/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@workspace/ksap-cloud-ui/components/ui/select";
+import { cn } from "@workspace/ksap-cloud-ui/lib/utils";
 
 /**
  * Mock of the V2 live-connection flow. Clickable so stakeholders can walk the
@@ -30,26 +32,28 @@ interface Connection {
   username: string;
 }
 
-const ENV_COLORS: Record<string, string> = {
-  PROD: "border-red-500/50 bg-red-500/10 text-red-700 dark:text-red-400",
-  DEV: "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  TEST: "border-sky-500/50 bg-sky-500/10 text-sky-700 dark:text-sky-400",
+const ENV_VARIANT: Record<string, StatusBadgeStatus> = {
+  PROD: "danger",
+  DEV: "success",
+  TEST: "info",
 };
 
 function EnvTag({ environment }: { environment: string }) {
-  const cls =
-    ENV_COLORS[environment.toUpperCase()] ??
-    "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400";
   return (
-    <Badge variant="outline" className={cn("font-mono text-[10px] uppercase", cls)} data-testid="env-tag">
+    <StatusBadge
+      status={ENV_VARIANT[environment.toUpperCase()] ?? "warning"}
+      className="font-mono"
+      data-testid="env-tag"
+    >
       {environment.toUpperCase()}
-    </Badge>
+    </StatusBadge>
   );
 }
 
 let nextId = 1;
 
 export function ConnectionMock() {
+  const { t } = useTranslation();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,7 +73,7 @@ export function ConnectionMock() {
     const env = environment === "CUSTOM" ? customEnv.trim() || "CUSTOM" : environment;
     const conn: Connection = {
       id: `conn-${nextId++}`,
-      customer: customer.trim() || "Customer",
+      customer: customer.trim() || t("connectionMock.customerFallback"),
       environment: env,
       baseUrl: baseUrl.trim(),
       username: username.trim(),
@@ -94,38 +98,38 @@ export function ConnectionMock() {
   };
 
   return (
-    <section aria-label="Live connection preview" className="grid gap-4">
+    <section aria-label={t("connectionMock.liveConnectionPreview")} className="grid gap-4">
       {/* Watermark */}
-      <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-primary/40">
+      <div className="relative overflow-hidden rounded-lg border-2 border-dashed border-primary/40">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <span className="block rotate-[-14deg] whitespace-nowrap rounded-lg border-2 border-primary/40 px-4 py-1.5 font-mono text-lg font-bold tracking-[0.25em] text-primary/40 uppercase select-none md:text-xl">
-              Preview — not functional
+          <div className="absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2">
+            <span className="block -rotate-12 whitespace-nowrap rounded-lg border-2 border-primary/40 px-4 py-2 font-mono text-subheading font-semibold text-primary/40 select-none md:text-heading">
+              {t("connectionMock.previewNotFunctional")}
             </span>
           </div>
         </div>
 
         <div className="relative grid gap-4 bg-card/70 p-5">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-sm font-semibold">V2 connection flow (mock)</h3>
-            <Badge variant="secondary" className="gap-1.5 text-caption">
-              <ShieldCheck className="size-3.5 text-primary" aria-hidden="true" />
-              Session only — resets on refresh
+            <h3 className="text-body font-semibold">{t("connectionMock.v2ConnectionFlowMock")}</h3>
+            <Badge variant="secondary" className="gap-2 text-caption">
+              <ShieldCheck className="size-icon-sm text-primary" aria-hidden="true" />
+              {t("connectionMock.sessionOnlyResetsOn")}
             </Badge>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ms-auto flex items-center gap-2">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setDialogOpen(true)}
                 data-testid="mock-add-connection"
               >
-                <Plus className="size-3.5" aria-hidden="true" />
-                Add connection
+                <Plus className="size-icon-sm" aria-hidden="true" />
+                {t("connectionMock.addConnection")}
               </Button>
               {connections.length > 0 && (
                 <Button size="sm" variant="ghost" onClick={disconnect} data-testid="mock-disconnect">
-                  <Unplug className="size-3.5" aria-hidden="true" />
-                  Disconnect all
+                  <Unplug className="size-icon-sm" aria-hidden="true" />
+                  {t("connectionMock.disconnectAll")}
                 </Button>
               )}
             </div>
@@ -133,8 +137,8 @@ export function ConnectionMock() {
 
           {connections.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background/80 p-3">
-              <span className="text-caption text-muted-foreground">Environment switcher</span>
-              <div className="flex flex-wrap gap-1.5" role="listbox" aria-label="Connected environments">
+              <span className="text-caption text-muted-foreground">{t("connectionMock.environmentSwitcher")}</span>
+              <div className="flex flex-wrap gap-2" role="listbox" aria-label={t("connectionMock.connectedEnvironments")}>
                 {connections.map((c) => (
                   <button
                     key={c.id}
@@ -147,53 +151,53 @@ export function ConnectionMock() {
                     }}
                     data-testid={`mock-env-${c.customer}-${c.environment}`}
                     className={cn(
-                      "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[12px] transition-colors",
+                      "flex items-center gap-2 rounded-md border px-3 py-2 text-caption transition-colors",
                       c.id === activeId
                         ? "border-primary bg-primary/5"
                         : "hover:border-primary/50",
                     )}
                   >
-                    <Building2 className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                    <span className="font-medium">{c.customer}</span>
+                    <Building2 className="size-icon-sm text-muted-foreground" aria-hidden="true" />
+                    <span className="font-semibold">{c.customer}</span>
                     <EnvTag environment={c.environment} />
                   </button>
                 ))}
               </div>
               {active && (
-                <span className="ml-auto hidden items-center gap-1.5 font-mono text-[11px] text-muted-foreground md:flex">
-                  <Globe className="size-3.5" aria-hidden="true" />
+                <span className="ms-auto hidden items-center gap-2 font-mono text-caption text-muted-foreground md:flex">
+                  <Globe className="size-icon-sm" aria-hidden="true" />
                   {active.baseUrl || "https://otm.example.com"} · {active.username}
                 </span>
               )}
             </div>
           ) : (
             <p className="rounded-lg border border-dashed bg-background/60 px-4 py-6 text-center text-caption text-muted-foreground">
-              No connections. Add one to preview how the header environment switcher will work.
+              {t("connectionMock.noConnectionsAddOne")}
             </p>
           )}
 
           {permissionError && active && (
             <div
               role="alert"
-              className="flex items-start gap-2.5 rounded-lg border border-red-500/40 bg-red-500/5 px-4 py-3"
+              className="flex items-start gap-3 rounded-lg border border-danger bg-danger-subtle px-4 py-3"
               data-testid="mock-permission-error"
             >
-              <ShieldAlert className="mt-0.5 size-4 shrink-0 text-red-600 dark:text-red-400" aria-hidden="true" />
-              <div className="text-sm">
-                <p className="font-medium text-red-700 dark:text-red-400">
-                  Your OTM user lacks the REST view permission for Agent.
+              <ShieldAlert className="mt-1 size-icon-sm shrink-0 text-danger" aria-hidden="true" />
+              <div className="text-body">
+                <p className="font-semibold text-danger">
+                  {t("connectionMock.yourOtmUserLacks")}
                 </p>
                 <p className="text-muted-foreground">
-                  Ask your OTM administrator to grant it, then reconnect.
+                  {t("connectionMock.askYourOtmAdministrator")}
                 </p>
               </div>
               <Button
                 size="sm"
                 variant="ghost"
-                className="ml-auto shrink-0"
+                className="ms-auto shrink-0"
                 onClick={() => setPermissionError(false)}
               >
-                Dismiss
+                {t("connectionMock.dismiss")}
               </Button>
             </div>
           )}
@@ -204,74 +208,74 @@ export function ConnectionMock() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent data-testid="mock-connection-dialog">
           <DialogHeader>
-            <DialogTitle>Add connection</DialogTitle>
+            <DialogTitle>{t("connectionMock.addConnection")}</DialogTitle>
             <DialogDescription>
-              V2 preview — connecting does nothing but simulate a session.
+              {t("connectionMock.v2PreviewConnectingDoes")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">
-            <div className="grid gap-1.5">
-              <Label htmlFor="conn-customer">Customer name</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="conn-customer">{t("connectionMock.customerName")}</Label>
               <Input
                 id="conn-customer"
                 value={customer}
                 onChange={(e) => setCustomer(e.target.value)}
-                placeholder="e.g. KSAP Logistics"
+                placeholder={t("connectionMock.eGKsapLogistics")}
                 autoComplete="organization"
               />
             </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="conn-environment">Environment label</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="conn-environment">{t("connectionMock.environmentLabel")}</Label>
               <Select value={environment} onValueChange={setEnvironment}>
                 <SelectTrigger id="conn-environment" data-testid="mock-env-select">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="DEV">DEV</SelectItem>
-                  <SelectItem value="TEST">TEST</SelectItem>
-                  <SelectItem value="PROD">PROD</SelectItem>
-                  <SelectItem value="CUSTOM">Custom…</SelectItem>
+                  <SelectItem value="DEV">{t("connectionMock.dev")}</SelectItem>
+                  <SelectItem value="TEST">{t("connectionMock.test")}</SelectItem>
+                  <SelectItem value="PROD">{t("connectionMock.prod")}</SelectItem>
+                  <SelectItem value="CUSTOM">{t("connectionMock.custom")}</SelectItem>
                 </SelectContent>
               </Select>
               {environment === "CUSTOM" && (
                 <Input
-                  aria-label="Custom environment label"
+                  aria-label={t("connectionMock.customEnvironmentLabel")}
                   value={customEnv}
                   onChange={(e) => setCustomEnv(e.target.value)}
-                  placeholder="e.g. UAT, TRAINING"
+                  placeholder={t("connectionMock.eGUatTraining")}
                   className="mt-1"
                 />
               )}
             </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="conn-url">OTM base URL</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="conn-url">{t("connectionMock.otmBaseUrl")}</Label>
               <Input
                 id="conn-url"
                 type="url"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
-                placeholder="https://otm.customer.com"
+                placeholder={t("connectionMock.httpsOtmCustomerCom")}
                 autoComplete="url"
               />
             </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="conn-username">Username</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="conn-username">{t("connectionMock.username")}</Label>
               <div className="relative">
-                <User className="absolute top-2.5 left-2.5 size-3.5 text-muted-foreground" aria-hidden="true" />
+                <User className="absolute top-3 start-2.5 size-icon-sm text-muted-foreground" aria-hidden="true" />
                 <Input
                   id="conn-username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="OTM user"
+                  placeholder={t("connectionMock.otmUser")}
                   autoComplete="username"
-                  className="pl-8"
+                  className="ps-8"
                 />
               </div>
             </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="conn-password">Password</Label>
+            <div className="grid gap-2">
+              <Label htmlFor="conn-password">{t("connectionMock.password")}</Label>
               <div className="relative">
-                <Lock className="absolute top-2.5 left-2.5 size-3.5 text-muted-foreground" aria-hidden="true" />
+                <Lock className="absolute top-3 start-2.5 size-icon-sm text-muted-foreground" aria-hidden="true" />
                 <Input
                   id="conn-password"
                   type="password"
@@ -279,30 +283,30 @@ export function ConnectionMock() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className="pl-8"
+                  className="ps-8"
                 />
               </div>
             </div>
-            <p className="flex items-start gap-1.5 text-caption text-muted-foreground">
-              <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
-              Credentials are used for this session only. They are never saved or logged.
+            <p className="flex items-start gap-2 text-caption text-muted-foreground">
+              <ShieldCheck className="mt-1 size-icon-sm shrink-0 text-primary" aria-hidden="true" />
+              {t("connectionMock.credentialsAreUsedFor")}
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t("connectionMock.cancel")}
             </Button>
             <Button
               onClick={() => {
                 connect();
                 track("mock_connection_added");
-                toast.info("Preview only — no connection was made", {
+                toast.info(t("connectionMock.previewOnlyNoConnection"), {
                   description: "The V2 flow will authenticate against OTM here.",
                 });
               }}
               data-testid="mock-connect"
             >
-              Connect
+              {t("connectionMock.connect")}
             </Button>
           </DialogFooter>
         </DialogContent>

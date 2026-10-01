@@ -1,23 +1,20 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
+import { useTranslation } from "react-i18next";
+import { FileQuestion } from "lucide-react";
+import { useNavigate } from "@/lib/router";
+import { EmptyStateContent } from "@workspace/ksap-cloud-ui/components/patterns/empty-state-content";
 
 export default function NotFound() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              404 Page Not Found
-            </h1>
-          </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
-          </p>
-        </CardContent>
-      </Card>
+    <div className="mx-auto flex min-h-dvh max-w-page items-center justify-center p-4 pt-safe pb-safe">
+      <EmptyStateContent
+        icon={<FileQuestion aria-hidden="true" />}
+        title={t("notFound.title")}
+        description={t("notFound.description")}
+        actionLabel={t("notFound.backHome")}
+        onAction={() => navigate("/")}
+      />
     </div>
   );
 }

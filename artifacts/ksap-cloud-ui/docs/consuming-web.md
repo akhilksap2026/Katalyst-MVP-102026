@@ -36,8 +36,14 @@ Use the package component whenever it provides the required family. Keep
 product-specific compositions in the app, but compose them from package
 primitives rather than recreating those primitives locally.
 
-The packaged `Toaster` and toast hook share one in-memory store. Do not call a
+The packaged `Toaster` and toast hook share the real Sonner store. Do not call a
 local toast hook while rendering the packaged `Toaster`.
+
+Behavior-free patterns are exported from `components/patterns/*`. Import
+`Card` compatibility names from `components/patterns/panel`, not a local Card.
+Connect `UIStringsProvider` from `lib/ui-strings` to the app's shared i18next
+namespace, using the exported `DEFAULT_UI_STRINGS` dictionary. Preferences
+stay in the app; `setDisplay` from `hooks/use-display` applies them to HTML.
 
 ## Verify
 

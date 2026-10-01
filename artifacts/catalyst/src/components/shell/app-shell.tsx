@@ -1,8 +1,10 @@
-import { useEffect, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { useNavigate } from "@/lib/router";
-import { PageTransition } from "@/components/shell/page-transition";
+import { Skeleton } from "@workspace/ksap-cloud-ui/components/ui/skeleton";
+import { CatalystUIStrings } from "@/i18n/ui-strings";
 import { PageMetadata } from "@/components/shell/page-metadata";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@workspace/ksap-cloud-ui/components/ui/sonner";
 import { Announcer } from "@/components/shell/announcer";
 import { Sidebar, MobileNavSheet } from "@/components/shell/sidebar";
 import { Header } from "@/components/shell/header";
@@ -29,6 +31,7 @@ const KEY_NAV: Record<string, string> = {
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const { setPaletteOpen, setShortcutsOpen, setTrayOpen } = useApp();
   const navigate = useNavigate();
 
@@ -70,16 +73,27 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [navigate, setPaletteOpen, setShortcutsOpen, setTrayOpen]);
 
   return (
+    <CatalystUIStrings>
     <div className="flex min-h-dvh">
           <PageMetadata />
-          <a href="#main-content" className="skip-link">
-            Skip to content
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">
+            {t("appShell.skipToContent")}
           </a>
           <Sidebar />
           <div className="flex min-w-0 flex-1 flex-col">
             <Header />
             <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-              <PageTransition>{children}</PageTransition>
+              <Suspense
+                fallback={
+                  <div className="mx-auto flex max-w-page flex-col gap-4 p-4" role="status" aria-label={t("appShell.loadingPage")}>
+                    <Skeleton className="h-8 w-1/3" />
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                  </div>
+                }
+              >
+                {children}
+              </Suspense>
             </main>
           </div>
           <CommandPalette />
@@ -87,8 +101,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <ListTray />
           <Assistant />
           <MobileNavSheet />
-          <Toaster position="bottom-right" richColors closeButton />
+          <Toaster position="bottom-right" closeButton />
           <Announcer />
     </div>
+    </CatalystUIStrings>
   );
 }

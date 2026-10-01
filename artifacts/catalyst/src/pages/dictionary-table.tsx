@@ -1,14 +1,15 @@
+import { useTranslation } from "react-i18next";
+import { PageHeader } from "@workspace/ksap-cloud-ui/components/patterns/page-header";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ContentTransition as ViewTransition } from "@/components/content-transition";
 import { useGo } from "@/hooks/use-go";
 import { Link, useNavigate, useParams } from "@/lib/router";
 import { ArrowLeft, Copy, KeyRound, Link2, ListPlus, Pin, PinOff, TriangleAlert, Wand2 } from "lucide-react";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@workspace/ksap-cloud-ui/components/ui/sonner";
+import { Badge } from "@workspace/ksap-cloud-ui/components/ui/badge";
+import { Button } from "@workspace/ksap-cloud-ui/components/ui/button";
+import { Checkbox } from "@workspace/ksap-cloud-ui/components/ui/checkbox";
+import { Input } from "@workspace/ksap-cloud-ui/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ksap-cloud-ui/components/ui/tabs";
 import { useActivity } from "@/hooks/use-activity";
 import {
   edgesOf,
@@ -26,6 +27,7 @@ import { useListTool } from "@/state/list-tool";
 import { highlightSql } from "@/lib/dictionary";
 
 export default function DictionaryTablePage() {
+  const { t } = useTranslation();
   const { release: paramRelease, table: paramTable } = useParams();
   const { release, setRelease } = useApp();
   const navigate = useNavigate();
@@ -61,17 +63,16 @@ export default function DictionaryTablePage() {
   if (!table) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-16 text-center">
-        <TriangleAlert className="mx-auto size-8 text-amber-600 dark:text-amber-400" strokeWidth={1.5} aria-hidden="true" />
-        <h1 className="mt-3 text-lg font-semibold">
-          {paramTable} is not in the {release} dictionary
+        <TriangleAlert className="mx-auto size-icon-lg text-warning" strokeWidth={1.5} aria-hidden="true" />
+        <h1 className="mt-3 text-subheading font-semibold">
+          {t("dictionaryTable.paramtableIsNotIn", { paramTable, release })}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The table may exist only in another release, or the name differs. Check the spelling or switch the
-          release in the header.
+        <p className="mt-1 text-body text-muted-foreground">
+          {t("dictionaryTable.theTableMayExist")}
         </p>
         <div className="mt-4 flex justify-center gap-2">
           <Button variant="outline" onClick={() => go("/dictionary", "nav-back")}>
-            Back to search
+            {t("dictionaryTable.backToSearch")}
           </Button>
         </div>
       </div>
@@ -84,6 +85,7 @@ export default function DictionaryTablePage() {
 /* ------------------------------------------------------------- table view */
 
 function TableView({ index, table, release }: { index: DictionaryIndex; table: DictTable; release: string }) {
+  const { t } = useTranslation();
   const { isPinned, togglePin } = useDictionary();
   const go = useGo();
 
@@ -93,7 +95,7 @@ function TableView({ index, table, release }: { index: DictionaryIndex; table: D
   const existsOther = getIndex(otherRelease)?.byTable.has(table.name) ?? false;
 
   const copyName = () => {
-    void navigator.clipboard.writeText(table.name).then(() => toast.success(`Copied ${table.name}`));
+    void navigator.clipboard.writeText(table.name).then(() => toast.success(t("dictionaryTable.copiedName", { name: table.name })));
   };
 
   return (
@@ -107,43 +109,44 @@ function TableView({ index, table, release }: { index: DictionaryIndex; table: D
           }}
           className="mb-2 inline-flex items-center gap-1 text-caption text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="size-3.5" aria-hidden="true" /> Data Dictionary
+          <ArrowLeft className="size-icon-sm" aria-hidden="true" />{" "}{t("dictionaryTable.dataDictionary")}
         </Link>
-        <div className="flex flex-wrap items-center gap-3">
-          <ViewTransition name={`table-${table.name}`} share="text-morph" default="none">
-            <h1 className="font-mono text-[22px] font-semibold tracking-tight">{table.name}</h1>
-          </ViewTransition>
-          <Badge variant="secondary" className="font-mono">{table.alias}</Badge>
-          <Badge variant="outline" className="font-mono">{release}</Badge>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">{table.description}</p>
+        <PageHeader
+          title={
+            <span className="flex flex-wrap items-center gap-3">
+              <span className="font-mono">{table.name}</span>
+              <Badge variant="secondary" className="font-mono">{table.alias}</Badge>
+              <Badge variant="outline" className="font-mono">{release}</Badge>
+            </span>
+          }
+          description={table.description}
+        />
         <div className="mt-3 flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={togglePin.bind(null, table.name)}>
             {isPinned(table.name) ? (
               <>
-                <PinOff className="size-4" aria-hidden="true" />
-                Unpin
+                <PinOff className="size-icon-sm" aria-hidden="true" />
+                {t("dictionaryTable.unpin")}
               </>
             ) : (
               <>
-                <Pin className="size-4" aria-hidden="true" />
-                Pin
+                <Pin className="size-icon-sm" aria-hidden="true" />
+                {t("dictionaryTable.pin")}
               </>
             )}
           </Button>
           <Button variant="outline" size="sm" onClick={copyName}>
-            <Copy className="size-4" aria-hidden="true" />
-            Copy name
+            <Copy className="size-icon-sm" aria-hidden="true" />
+            {t("dictionaryTable.copyName")}
           </Button>
         </div>
       </header>
 
       {existsHere && !existsOther && (
-        <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2">
-          <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-          <p className="text-caption text-amber-700 dark:text-amber-300">
-            {table.name} does not exist in release {otherRelease}. Switching the header release will leave
-            this view.
+        <div className="mb-5 flex items-start gap-2 rounded-lg border border-warning bg-warning-subtle px-3 py-2">
+          <TriangleAlert className="mt-1 size-icon-sm shrink-0 text-warning" aria-hidden="true" />
+          <p className="text-caption text-warning">
+            {t("dictionaryTable.nameDoesNotExist", { name: table.name, otherRelease })}
           </p>
         </div>
       )}
@@ -151,21 +154,21 @@ function TableView({ index, table, release }: { index: DictionaryIndex; table: D
       <Tabs defaultValue="columns">
         <TabsList>
           <TabsTrigger value="columns">
-            Columns
-            <Badge variant="secondary" className="ms-1.5 h-4 px-1.5 font-mono text-[10px]">
+            {t("dictionaryTable.columns")}
+            <Badge variant="secondary" className="ms-2 px-2 font-mono text-caption">
               {table.columns.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="relationships">
-            Relationships
+            {t("dictionaryTable.relationships")}
             {tableHasFks(table, index) && (
-              <Badge variant="secondary" className="ms-1.5 h-4 px-1.5 font-mono text-[10px]">
+              <Badge variant="secondary" className="ms-2 px-2 font-mono text-caption">
                 {edgesOf(table.name, index).length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="flex">Flex fields</TabsTrigger>
-          <TabsTrigger value="sql">SQL</TabsTrigger>
+          <TabsTrigger value="flex">{t("dictionaryTable.flexFields")}</TabsTrigger>
+          <TabsTrigger value="sql">{t("dictionaryTable.sql")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="columns" className="mt-4">
@@ -188,6 +191,7 @@ function TableView({ index, table, release }: { index: DictionaryIndex; table: D
 /* ------------------------------------------------------------- columns tab */
 
 function ColumnsTab({ table }: { table: DictTable }) {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { openTrayWith } = useListTool();
@@ -207,7 +211,7 @@ function ColumnsTab({ table }: { table: DictTable }) {
 
   const copySelected = () => {
     const names = filtered.filter((c) => selected.has(c.name)).map((c) => c.name);
-    void navigator.clipboard.writeText(names.join("\n")).then(() => toast.success(`Copied ${names.length} column names`));
+    void navigator.clipboard.writeText(names.join("\n")).then(() => toast.success(t("dictionaryTable.copiedColumns", { count: names.length })));
   };
 
   const sendToTray = () => {
@@ -221,24 +225,24 @@ function ColumnsTab({ table }: { table: DictTable }) {
         <Input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter columns…"
-          className="h-8 w-56 text-xs"
-          aria-label="Filter columns"
+          placeholder={t("dictionaryTable.filterColumns")}
+          className="h-8 w-56 text-caption"
+          aria-label={t("dictionaryTable.filterColumns2")}
         />
         <span className="ms-auto text-caption text-muted-foreground">
-          {selected.size} selected
+          {t("dictionaryTable.sizeSelected", { size: selected.size })}
         </span>
         <Button size="sm" variant="outline" disabled={selected.size === 0} onClick={copySelected}>
-          <Copy className="size-4" aria-hidden="true" />
-          Copy selected
+          <Copy className="size-icon-sm" aria-hidden="true" />
+          {t("dictionaryTable.copySelected")}
         </Button>
         <Button size="sm" variant="outline" disabled={selected.size === 0} onClick={sendToTray}>
-          <ListPlus className="size-4" aria-hidden="true" />
-          Send to list tray
+          <ListPlus className="size-icon-sm" aria-hidden="true" />
+          {t("dictionaryTable.sendToListTray")}
         </Button>
       </div>
 
-      <ul className="divide-y rounded-xl border bg-card">
+      <ul className="divide-y rounded-lg border bg-card">
         {filtered.map((col) => (
           <li key={col.name} className="flex items-center gap-3 px-3 py-2">
             <Checkbox
@@ -248,29 +252,29 @@ function ColumnsTab({ table }: { table: DictTable }) {
               aria-label={`Select ${col.name}`}
             />
             <label htmlFor={`col-${col.name}`} className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
-              <span className="font-mono text-[13px] font-medium">{col.name}</span>
+              <span className="font-mono text-body font-semibold">{col.name}</span>
               {pk.has(col.name) && (
-                <Badge className="h-4 gap-0.5 bg-primary px-1.5 text-[10px] text-primary-foreground">
-                  <KeyRound className="size-2.5" aria-hidden="true" />
-                  PK
+                <Badge className="gap-1 bg-primary px-2 text-caption text-primary-foreground">
+                  <KeyRound className="size-icon-sm" aria-hidden="true" />
+                  {t("dictionaryTable.pk")}
                 </Badge>
               )}
-              {fkCols.has(col.name) && <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">FK</Badge>}
+              {fkCols.has(col.name) && <Badge variant="secondary" className="px-2 text-caption">{t("dictionaryTable.fk")}</Badge>}
               {isFootprintColumn(col.name) && (
-                <Badge variant="outline" className="h-4 px-1.5 text-[10px] text-muted-foreground">footprint</Badge>
+                <Badge variant="outline" className="px-2 text-caption text-muted-foreground">{t("dictionaryTable.footprint")}</Badge>
               )}
             </label>
             <span className="hidden font-mono text-caption text-muted-foreground sm:block">{col.oracleDataType}</span>
             <span
-              className={`w-14 text-end text-caption ${col.nullable ? "text-muted-foreground" : "font-medium"}`}
+              className={`w-14 text-end text-caption ${col.nullable ? "text-muted-foreground" : "font-semibold"}`}
             >
-              {col.nullable ? "null" : "not null"}
+              {col.nullable ? t("dictionaryTable.nullable") : t("dictionaryTable.notNull")}
             </span>
             <span className="hidden w-72 truncate text-caption text-muted-foreground lg:block">{col.description}</span>
           </li>
         ))}
         {filtered.length === 0 && (
-          <li className="px-3 py-6 text-center text-caption text-muted-foreground">No columns match “{filter}”.</li>
+          <li className="px-3 py-6 text-center text-caption text-muted-foreground">{t("dictionaryTable.noColumnsMatchFilter", { filter })}</li>
         )}
       </ul>
     </div>
@@ -280,6 +284,7 @@ function ColumnsTab({ table }: { table: DictTable }) {
 /* -------------------------------------------------------- relationships tab */
 
 function RelationshipsTab({ index, table, release }: { index: DictionaryIndex; table: DictTable; release: string }) {
+  const { t } = useTranslation();
   const edges = edgesOf(table.name, index);
   const outgoing = edges.filter((e) => e.to !== table.name && table.foreignKeys.some((fk) => fk.references.table === e.to));
   const incoming = edges.filter((e) => !table.foreignKeys.some((fk) => fk.references.table === e.to));
@@ -289,23 +294,23 @@ function RelationshipsTab({ index, table, release }: { index: DictionaryIndex; t
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="flex flex-col gap-5">
         <section>
-          <h3 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-            Outgoing — this table → parent
+          <h3 className="mb-2 text-caption font-semibold text-muted-foreground">
+            {t("dictionaryTable.outgoingThisTableParent")}
           </h3>
           {outgoing.length === 0 ? (
-            <p className="text-caption text-muted-foreground">No outgoing foreign keys.</p>
+            <p className="text-caption text-muted-foreground">{t("dictionaryTable.noOutgoingForeignKeys")}</p>
           ) : (
-            <ul className="divide-y rounded-xl border bg-card">
+            <ul className="divide-y rounded-lg border bg-card">
               {outgoing.map((e, i) => (
-                <li key={i} className="flex flex-wrap items-center gap-2 px-3 py-2.5">
-                  <Link2 className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <li key={i} className="flex flex-wrap items-center gap-2 px-3 py-3">
+                  <Link2 className="size-icon-sm shrink-0 text-muted-foreground" aria-hidden="true" />
                   <Link
                     to={`/dictionary/${release}/${e.to}`}
-                    className="font-mono text-[13px] text-primary hover:underline"
+                    className="font-mono text-body text-primary-ink hover:underline"
                   >
                     {e.to}
                   </Link>
-                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                  <code className="rounded bg-muted px-2 py-1 font-mono text-caption text-muted-foreground">
                     {e.fk.columns.join(", ")} → {e.fk.references.columns.join(", ")}
                   </code>
                 </li>
@@ -314,23 +319,23 @@ function RelationshipsTab({ index, table, release }: { index: DictionaryIndex; t
           )}
         </section>
         <section>
-          <h3 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-            Incoming — child → this table
+          <h3 className="mb-2 text-caption font-semibold text-muted-foreground">
+            {t("dictionaryTable.incomingChildThisTable")}
           </h3>
           {incoming.length === 0 ? (
-            <p className="text-caption text-muted-foreground">No incoming foreign keys.</p>
+            <p className="text-caption text-muted-foreground">{t("dictionaryTable.noIncomingForeignKeys")}</p>
           ) : (
-            <ul className="divide-y rounded-xl border bg-card">
+            <ul className="divide-y rounded-lg border bg-card">
               {incoming.map((e, i) => (
-                <li key={i} className="flex flex-wrap items-center gap-2 px-3 py-2.5">
-                  <Link2 className="size-3.5 shrink-0 rotate-180 text-muted-foreground" aria-hidden="true" />
+                <li key={i} className="flex flex-wrap items-center gap-2 px-3 py-3">
+                  <Link2 className="size-icon-sm shrink-0 rotate-180 text-muted-foreground" aria-hidden="true" />
                   <Link
                     to={`/dictionary/${release}/${e.to}`}
-                    className="font-mono text-[13px] text-primary hover:underline"
+                    className="font-mono text-body text-primary-ink hover:underline"
                   >
                     {e.to}
                   </Link>
-                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                  <code className="rounded bg-muted px-2 py-1 font-mono text-caption text-muted-foreground">
                     {e.fk.columns.join(", ")} → {table.name}.{e.fk.references.columns.join(", ")}
                   </code>
                 </li>
@@ -340,9 +345,9 @@ function RelationshipsTab({ index, table, release }: { index: DictionaryIndex; t
         </section>
       </div>
 
-      <section aria-label="Neighbour map">
-        <h3 className="mb-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
-          Direct neighbours
+      <section aria-label={t("dictionaryTable.neighbourMap")}>
+        <h3 className="mb-2 text-caption font-semibold text-muted-foreground">
+          {t("dictionaryTable.directNeighbours")}
         </h3>
         <MiniMap index={index} table={table} neighbours={neighbours} release={release} />
       </section>
@@ -374,7 +379,7 @@ function MiniMap({
   });
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl border bg-card" role="img" aria-label={`Foreign key map around ${table.name}`}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-lg border bg-card" role="img" aria-label={`Foreign key map around ${table.name}`}>
       {neighbours.map((n) => {
         const p = pos.get(n)!;
         return (
@@ -416,17 +421,18 @@ function MiniMap({
 /* --------------------------------------------------------------- flex tab */
 
 function FlexTab({ table }: { table: DictTable }) {
+  const { t } = useTranslation();
   const groups = [
-    { family: "attribute" as const, label: "ATTRIBUTE", note: "VARCHAR2(150) text flex fields" },
-    { family: "attribute_number" as const, label: "ATTRIBUTE_NUMBER", note: "NUMBER flex fields" },
-    { family: "attribute_date" as const, label: "ATTRIBUTE_DATE", note: "DATE flex fields" },
+    { family: "attribute" as const, label: "ATTRIBUTE", note: t("dictionaryTable.flexText") },
+    { family: "attribute_number" as const, label: "ATTRIBUTE_NUMBER", note: t("dictionaryTable.flexNumber") },
+    { family: "attribute_date" as const, label: "ATTRIBUTE_DATE", note: t("dictionaryTable.flexDate") },
   ];
   const anyFlex = table.columns.some((c) => flexFamilyOf(c.name));
 
   if (!anyFlex) {
     return (
-      <p className="rounded-xl border border-dashed bg-card px-4 py-8 text-center text-caption text-muted-foreground">
-        {table.name} has no flex fields.
+      <p className="rounded-lg border border-dashed bg-card px-4 py-8 text-center text-caption text-muted-foreground">
+        {t("dictionaryTable.nameHasNoFlex", { name: table.name })}
       </p>
     );
   }
@@ -438,14 +444,14 @@ function FlexTab({ table }: { table: DictTable }) {
         if (cols.length === 0) return null;
         return (
           <section key={g.family}>
-            <h3 className="mb-2 flex flex-wrap items-baseline gap-2 text-caption font-medium uppercase tracking-wide text-muted-foreground">
+            <h3 className="mb-2 flex flex-wrap items-baseline gap-2 text-caption font-semibold text-muted-foreground">
               {g.label}
-              <Badge variant="secondary" className="font-mono text-[10px]">{cols.length}</Badge>
+              <Badge variant="secondary" className="font-mono text-caption">{cols.length}</Badge>
               <span className="normal-case tracking-normal">{g.note}</span>
             </h3>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {cols.map((c) => (
-                <code key={c.name} className="rounded border border-border bg-card px-1.5 py-1 font-mono text-[11px]">
+                <code key={c.name} className="rounded border border-border bg-card px-2 py-1 font-mono text-caption">
                   {c.name}
                 </code>
               ))}
@@ -453,9 +459,9 @@ function FlexTab({ table }: { table: DictTable }) {
           </section>
         );
       })}
-      <p className="flex items-start gap-1.5 text-caption text-muted-foreground">
-        <Wand2 className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
-        Shows available flex fields. Checking which are used needs a live connection (planned).
+      <p className="flex items-start gap-2 text-caption text-muted-foreground">
+        <Wand2 className="mt-1 size-icon-sm shrink-0 text-primary" aria-hidden="true" />
+        {t("dictionaryTable.showsAvailableFlexFields")}
       </p>
     </div>
   );
@@ -464,6 +470,7 @@ function FlexTab({ table }: { table: DictTable }) {
 /* ---------------------------------------------------------------- sql tab */
 
 function SqlTab({ table }: { table: DictTable }) {
+  const { t } = useTranslation();
   const [includeFootprint, setIncludeFootprint] = useState(false);
   const sql = useMemo(() => selectSql(table, includeFootprint), [table, includeFootprint]);
   return (
@@ -473,25 +480,25 @@ function SqlTab({ table }: { table: DictTable }) {
           size="sm"
           variant="outline"
           onClick={() => {
-            void navigator.clipboard.writeText(sql).then(() => toast.success("Copied SELECT"));
+            void navigator.clipboard.writeText(sql).then(() => toast.success(t("dictionaryTable.copiedSelect")));
           }}
         >
-          <Copy className="size-4" aria-hidden="true" />
-          Copy SQL
+          <Copy className="size-icon-sm" aria-hidden="true" />
+          {t("dictionaryTable.copySql")}
         </Button>
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+        <label className="flex items-center gap-2 text-caption text-muted-foreground">
           <Checkbox checked={includeFootprint} onCheckedChange={(v) => setIncludeFootprint(v === true)} />
-          Include footprint columns
+          {t("dictionaryTable.includeFootprintColumns")}
         </label>
       </div>
       <pre
-        className="overflow-x-auto rounded-xl border bg-card p-4 font-mono text-[12.5px] leading-5"
-        aria-label="Generated SELECT statement"
+        className="overflow-x-auto rounded-lg border bg-card p-4 font-mono text-caption leading-5"
+        aria-label={t("dictionaryTable.generatedSelectStatement")}
       >
         <code dangerouslySetInnerHTML={{ __html: highlightSql(sql) }} />
       </pre>
       <p className="text-caption text-muted-foreground">
-        Footprint columns (INSERT_USER, INSERT_DATE, UPDATE_USER, UPDATE_DATE) are excluded by default.
+        {t("dictionaryTable.footprintColumnsInsertUser")}
       </p>
     </div>
   );

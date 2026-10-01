@@ -381,9 +381,9 @@ export function highlightSql(sql: string): string {
     /(--[^\n]*)|('(?:[^']|'')*')|\b(SELECT|FROM|WHERE|AND|OR|IN|JOIN|ON|GROUP|BY|ORDER|LEFT|RIGHT|INNER|OUTER|AS|DISTINCT|UNION|BETWEEN|LIKE|IS|NULL|NOT)\b|\b(\d+(?:\.\d+)?)\b/gi,
     (m, comment, str, kw, num) => {
       if (comment) return `<span class="text-muted-foreground italic">${comment}</span>`;
-      if (str) return `<span class="text-emerald-700 dark:text-emerald-400">${str}</span>`;
-      if (kw) return `<span class="text-primary font-semibold">${kw.toUpperCase()}</span>`;
-      if (num) return `<span class="text-amber-700 dark:text-amber-400">${num}</span>`;
+      if (str) return `<span class="text-success">${str}</span>`;
+      if (kw) return `<span class="text-primary-ink font-semibold">${kw.toUpperCase()}</span>`;
+      if (num) return `<span class="text-warning">${num}</span>`;
       return m;
     },
   );

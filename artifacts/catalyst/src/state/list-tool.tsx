@@ -7,7 +7,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { toast } from "sonner";
+import i18n from "i18next";
+import { toast } from "@workspace/ksap-cloud-ui/components/ui/sonner";
 import {
   DEFAULT_OPTIONS,
   computeStats,
@@ -108,9 +109,9 @@ export function ListToolProvider({ children }: { children: ReactNode }) {
   const copy = useCallback(() => {
     if (!outputText) return;
     void navigator.clipboard.writeText(outputText).then(() => {
-      toast.success(`Copied ${stats.valuesOut} ${stats.valuesOut === 1 ? "value" : "values"}`);
+      toast.success(i18n.t("listTool.copiedValues", { count: stats.valuesOut }));
       track("list_copied", stats.valuesOut);
-      announce(`Copied ${stats.valuesOut} ${stats.valuesOut === 1 ? "value" : "values"} from the list`);
+      announce(i18n.t("listTool.copiedValues", { count: stats.valuesOut }));
       // Lets other tools (e.g. the join query builder's "Insert list") pick up
       // the copied text without reading the clipboard themselves.
       window.dispatchEvent(new CustomEvent("catalyst:list-copied", { detail: outputText }));
@@ -126,9 +127,9 @@ export function ListToolProvider({ children }: { children: ReactNode }) {
     a.download = "catalyst-list.txt";
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`Downloaded ${stats.valuesOut} ${stats.valuesOut === 1 ? "value" : "values"}`);
+    toast.success(i18n.t("listTool.downloadedValues", { count: stats.valuesOut }));
     track("list_downloaded", stats.valuesOut);
-    announce(`Downloaded ${stats.valuesOut} ${stats.valuesOut === 1 ? "value" : "values"}`);
+    announce(i18n.t("listTool.downloadedValues", { count: stats.valuesOut }));
   }, [outputText, stats.valuesOut]);
 
   const openTrayWith = useCallback(

@@ -7,19 +7,25 @@ on it and import its theme and components directly.
 
 ## What's here
 
-### Source-backed pilot status
+### Source-backed library status
 
 This is a source-backed build of the retained `DESIGN.md` version 6.1, not a
-stock component catalog. The shipped public families are **Button, Input,
-Textarea, Label and Field**. The full ordered inventory and one reference per
-family live in `docs/references/component-inventory.md` and
-`docs/references/components/`. Later families are pending pilot approval; do not
-import them or begin a whole-app migration before they have been built.
+stock component catalog. All **41 source families** are implemented in the
+approved seven-chunk order, including the four behavior-free patterns.
+The pilot was approved before continuing. The full ordered inventory and one
+reference per family live in `docs/references/component-inventory.md` and
+`docs/references/components/`. Each family has a lazy-loaded preview story.
+
+Resizable panels are an additional supporting primitive from the approved
+shadcn scaffold, backed by react-resizable-panels. They preserve Catalyst's
+adjustable comparison list/detail view and provide keyboard resizing and
+44px invisible pointer targets; they are not an extra source-inventory family.
 
 The unused scaffold is retained as build evidence under
 `docs/references/scaffold/`, not exported or registered in the preview.
-Field's Radix Separator helper is internal to that family; the independent
-Separator family is still pending.
+Field's Radix Separator helper remains internal; the public Separator family
+is also provided. Panel restores the approved Card privately and exposes its
+Card names as compatibility aliases from `components/patterns/panel`.
 
 `scripts/ksap-theme.mjs` extends the token generator with the source-defined
 Tailwind lock, named utilities, semantic type scale, palettes, density and
@@ -99,6 +105,27 @@ this package. Components added through shadcn may use this package's
 consumer-safe because they resolve against this package.
 
 ## Editing and maintaining the design system
+
+Source paths such as `@ksap/ui` and `src/styles/ksap-theme.css` describe the
+supplied reference organization. Here the package is `@workspace/ksap-cloud-ui`,
+the DTCG source is `tokens.json`, and the generated theme is `src/index.css`.
+This mapping does not change source anchors or behavior engines.
+
+Dark status-subtle surfaces are documented derivations: fixed status ink
+blended at the source dark-selection ratio of 14% onto the dark canvas.
+Sidebar aliases follow the palette rail and its text, including selected
+white/ink overlays; they do not retain stock Blue aliases in other palettes.
+
+`lib/ui-strings` provides a shared copy dictionary and translation callback
+for primitive accessibility text. Consumers connect it to their shared
+i18next namespace. `lib/format` requires the active locale on every call.
+Sonner and the legacy `use-toast` adapter share the real Sonner store:
+info/success 4s, warning 7s and dismissible sticky errors.
+
+Prebuild and pretypecheck run the style, palette and icon gates. Approved
+runtime geometry and chart style generation are allowed only in the documented
+primitive scopes; product copy, arbitrary classes and app inline styles remain
+blocked. See `docs/references/governance.md`.
 
 Edit `tokens.json` only, then run `pnpm tokens`; the dev server also regenerates
 on change. Never hand-edit `src/index.css` or `src/generated/tokens.tsx`.

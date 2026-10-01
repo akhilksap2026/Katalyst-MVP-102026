@@ -46,7 +46,7 @@ export function OverviewPage() {
         </div>
       </section>
     </div>
-    <section className="ksap-panel"><h2 className="ksap-section-title">Source and current scope</h2><p className="ksap-prose">Built from KSAP Cloud UI DESIGN.md version 6.1 using the approved shadcn and Radix implementations. The five-family pilot is shipped; 36 remaining families are documented but intentionally not exported. Catalyst migration follows approval of this initial set.</p><p className="ksap-caption mt-3">Official wordmark files were not supplied. This preview uses a plain-text title, not a reconstructed logo.</p></section>
+    <section className="ksap-panel"><h2 className="ksap-section-title">Source and current scope</h2><p className="ksap-prose">Built from KSAP Cloud UI DESIGN.md version 6.1 using the approved shadcn, Radix and documented behavior engines. All 41 component families are available, including data components and reusable page patterns. The approved pilot below shows the first five families together.</p><p className="ksap-caption mt-3">Official wordmark files were not supplied. This preview uses a plain-text title, not a reconstructed logo.</p></section>
   </div>;
 }
 export function ColorsPage() {

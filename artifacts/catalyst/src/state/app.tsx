@@ -9,9 +9,13 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
+import i18n from "@/i18n";
+import { setDisplay } from "@workspace/ksap-cloud-ui/hooks/use-display";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 export type Theme = "light" | "dark" | "system";
+export type Palette = "blue" | "red" | "green" | "yellow";
+export type Density = "compact" | "standard" | "relaxed";
 export type EffectiveTheme = "light" | "dark";
 
 export interface DemoUser {
@@ -20,13 +24,17 @@ export interface DemoUser {
   initials: string;
 }
 
-const DEMO_USER: DemoUser = { name: "Demo consultant", email: "demo@ksap.example", initials: "DC" };
+const DEMO_USER: DemoUser = { name: i18n.t("app.demoUser"), email: "demo@ksap.example", initials: "DC" };
 
 interface AppState {
   theme: Theme;
   effectiveTheme: EffectiveTheme;
   setTheme: (t: Theme) => void;
   cycleTheme: () => void;
+  palette: Palette;
+  setPalette: (p: Palette) => void;
+  density: Density;
+  setDensity: (d: Density) => void;
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
   release: string;
@@ -58,6 +66,8 @@ const THEME_ORDER: Theme[] = ["light", "dark", "system"];
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useLocalStorage<Theme>("theme", "system");
+  const [palette, setPalette] = useLocalStorage<Palette>("palette", "blue");
+  const [density, setDensity] = useLocalStorage<Density>("density", "standard");
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage<boolean>("sidebar.collapsed", false);
   const [release, setRelease] = useLocalStorage<string>("release", "26A");
   const [signedIn, setSignedIn] = useLocalStorage<boolean>("auth.signed-in", false);
@@ -78,9 +88,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", effectiveTheme === "dark");
-    document.documentElement.style.colorScheme = effectiveTheme;
-  }, [effectiveTheme]);
+    // Package helper writes data-theme/palette/density to <html>; the Toaster reads the same store.
+    setDisplay({ theme, palette, density });
+  }, [theme, palette, density, system]);
 
   const cycleTheme = useCallback(() => {
     setTheme(THEME_ORDER[(THEME_ORDER.indexOf(theme) + 1) % THEME_ORDER.length]);
@@ -109,6 +119,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       effectiveTheme,
       setTheme,
       cycleTheme,
+      palette,
+      setPalette,
+      density,
+      setDensity,
       sidebarCollapsed,
       toggleSidebar,
       release,
@@ -129,7 +143,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       pushRecent,
     }),
     [
-      theme, effectiveTheme, setTheme, cycleTheme, sidebarCollapsed, toggleSidebar,
+      theme, effectiveTheme, setTheme, cycleTheme, palette, setPalette, density, setDensity, sidebarCollapsed, toggleSidebar,
       release, setRelease, signedIn, signIn, signOut, paletteOpen, shortcutsOpen, trayOpen,
       mobileNavOpen, recents, pushRecent,
     ],

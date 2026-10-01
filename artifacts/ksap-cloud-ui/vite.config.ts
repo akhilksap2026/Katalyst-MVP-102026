@@ -54,6 +54,7 @@ if (!basePath) {
 
 export default defineConfig({
   base: basePath,
+  resolve: { dedupe: ["react", "react-dom"] },
   plugins: [
     designTokensPlugin(),
     react(),

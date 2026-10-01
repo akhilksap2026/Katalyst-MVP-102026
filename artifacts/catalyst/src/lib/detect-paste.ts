@@ -2,6 +2,7 @@
  * Paste detection for the Home smart paste box.
  * Pure functions — no DOM, no storage — so they are unit-testable.
  */
+import { tr } from "@/lib/tr";
 
 export type PasteKind = "agent-extract" | "table" | "list" | "text";
 
@@ -36,11 +37,11 @@ export function isIdLike(token: string): boolean {
  */
 export function detectPaste(input: string, tableNames: readonly string[]): PasteDetection {
   const text = input.trim();
-  if (!text) return { kind: "text", reason: "Nothing pasted yet" };
+  if (!text) return { kind: "text", reason: tr("detect.nothing") };
 
   // 1. DB.XML agent extract
   if (/<AGENT[\s>]/.test(text) || /<AGENT_GID>/.test(text)) {
-    return { kind: "agent-extract", reason: "DB.XML transmission with AGENT records" };
+    return { kind: "agent-extract", reason: tr("detect.xml") };
   }
 
   // 2. CSV extract of the AGENT table: plain header on line 1, or the OTM
@@ -60,7 +61,7 @@ export function detectPaste(input: string, tableNames: readonly string[]): Paste
     if (header && AGENT_CSV_COLUMNS.every((c) => header.includes(c))) {
       return {
         kind: "agent-extract",
-        reason: `CSV with ${AGENT_CSV_COLUMNS.join(" and ")} columns`,
+        reason: tr("detect.csv", { columns: AGENT_CSV_COLUMNS.join(tr("detect.and")) }),
       };
     }
   }
@@ -69,7 +70,7 @@ export function detectPaste(input: string, tableNames: readonly string[]): Paste
   if (text.length <= 60 && !/[\s,;]/.test(text)) {
     const upper = text.toUpperCase();
     if (tableNames.includes(upper)) {
-      return { kind: "table", table: upper, reason: `${upper} is a table in the dictionary` };
+      return { kind: "table", table: upper, reason: tr("detect.table", { table: upper }) };
     }
   }
 
@@ -80,9 +81,9 @@ export function detectPaste(input: string, tableNames: readonly string[]): Paste
     return {
       kind: "list",
       values: tokens,
-      reason: `${idLike.length} of ${tokens.length} values look like IDs or GIDs`,
+      reason: tr("detect.ids", { count: idLike.length, total: tokens.length }),
     };
   }
 
-  return { kind: "text", reason: "No structure detected" };
+  return { kind: "text", reason: tr("detect.none") };
 }
