@@ -1,0 +1,1 @@
+- [React runtime compatibility](react-runtime-compatibility.md) — prerelease React typings can accept APIs absent from the stable runtime.

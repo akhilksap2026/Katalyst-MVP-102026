@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "@/lib/router";
 import { PageTransition } from "@/components/shell/page-transition";
+import { PageMetadata } from "@/components/shell/page-metadata";
 import { Toaster } from "@/components/ui/sonner";
 import { Announcer } from "@/components/shell/announcer";
 import { Sidebar, MobileNavSheet } from "@/components/shell/sidebar";
@@ -70,6 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh">
+          <PageMetadata />
           <a href="#main-content" className="skip-link">
             Skip to content
           </a>

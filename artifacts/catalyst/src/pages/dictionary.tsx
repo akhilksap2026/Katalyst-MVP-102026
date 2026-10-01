@@ -1,4 +1,5 @@
-import { ViewTransition, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ContentTransition as ViewTransition } from "@/components/content-transition";
 import { useGo } from "@/hooks/use-go";
 import { Link } from "@/lib/router";
 import { ArrowRight, CornerDownLeft, Link2, Pin, PinOff, Search, Table2, Wand2 } from "lucide-react";

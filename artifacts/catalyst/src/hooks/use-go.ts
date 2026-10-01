@@ -1,15 +1,14 @@
-import { addTransitionType, startTransition, useCallback } from "react";
+import { startTransition, useCallback } from "react";
 import { useNavigate } from "@/lib/router";
 
 export type NavType = "nav-forward" | "nav-back";
 
-/** Navigate inside a transition, tagging direction so page transitions can slide forward/back. */
+/** Navigate inside a supported React transition. */
 export function useGo() {
   const navigate = useNavigate();
   return useCallback(
-    (to: string, type?: NavType) => {
+    (to: string, _type?: NavType) => {
       startTransition(() => {
-        if (type) addTransitionType(type);
         navigate(to);
       });
     },

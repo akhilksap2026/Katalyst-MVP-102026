@@ -258,14 +258,14 @@ export function Header() {
         ) : (
           <Button
             size="sm"
-            aria-label="Sign in"
+            aria-label="Sign in to demo session"
             onClick={() => {
               signIn();
               toast.info("Signed in to a simulated demo session — Catalyst has no server in this prototype.");
             }}
           >
             <LogIn className="size-4" aria-hidden="true" />
-            <span className="max-md:hidden">Sign in</span>
+            <span className="max-md:hidden">Demo sign in</span>
           </Button>
         )}
 

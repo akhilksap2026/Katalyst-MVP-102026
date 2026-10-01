@@ -1,4 +1,5 @@
-import { ViewTransition, startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ContentTransition as ViewTransition } from "@/components/content-transition";
 import {
   ArrowDownUp,
   ArrowLeft,

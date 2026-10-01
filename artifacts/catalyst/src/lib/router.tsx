@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useLocation as useWouterLocation, useParams } from "wouter";
+import { useLocation as useWouterLocation, useParams, useSearch } from "wouter";
 import type { ComponentProps, ReactNode } from "react";
 
 type AppLinkProps = Omit<ComponentProps<"a">, "href"> & {
@@ -49,8 +49,8 @@ export function useLocation() {
 export { useParams };
 
 export function useSearchParams(): [URLSearchParams] {
-  const { pathname } = useLocation();
-  return [useMemo(() => new URLSearchParams(window.location.search), [pathname])];
+  const search = useSearch();
+  return [useMemo(() => new URLSearchParams(search), [search])];
 }
 
 export function Outlet({ children }: ComponentProps<"div">) {

@@ -1,4 +1,5 @@
-import { Suspense, ViewTransition, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { ContentTransition as ViewTransition } from "@/components/content-transition";
 import { useLocation } from "@/lib/router";
 import { SkeletonRows } from "@/components/state-block";
 
