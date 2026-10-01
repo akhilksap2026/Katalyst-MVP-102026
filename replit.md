@@ -1,6 +1,6 @@
-# [Project name]
+# Catalyst
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+An offline-first toolkit for comparing automation-agent extracts, browsing a data dictionary, and cleaning pasted lists.
 
 ## Run & Operate
 
@@ -22,23 +22,28 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/catalyst/` — Catalyst web application
+- `artifacts/api-server/` — shared API service scaffold; Catalyst currently does not use it
+- `artifacts/mockup-sandbox/` — reusable component preview sandbox
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Catalyst is client-only and processes pasted data locally in the browser; do not add network persistence without an explicit product change.
+- Bundled dictionary and DEV/PROD sample extracts are application assets, not server data.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Paste detection routes supported input to the agent comparison, dictionary, or list-cleaning tools.
+- Agent Compare reviews added, removed, and changed actions/events between extracts.
+- The Data Dictionary supports table lookup and join exploration; the List Utility normalizes and compares values.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+_No project-specific preferences recorded._
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- User workspace data is stored locally; clearing browser storage removes local preferences and recent activity.
 
 ## Pointers
 

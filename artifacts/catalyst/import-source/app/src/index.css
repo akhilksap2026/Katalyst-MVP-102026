@@ -1,0 +1,285 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm neutral grey surfaces */
+    --background: 45 8% 97%;
+    --foreground: 200 12% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 200 12% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 12% 13%;
+
+    /* One accent: deep teal #0F6E6E */
+    --primary: 180 76% 25%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 180 78% 21%;
+    --primary-ink: 180 76% 25%;
+    --accent: 180 30% 93%;
+    --accent-foreground: 180 78% 20%;
+    --accent-secondary: 180 24% 88%;
+
+    --secondary: 45 6% 93%;
+    --secondary-foreground: 200 12% 18%;
+    --muted: 45 6% 93%;
+    --muted-foreground: 210 7% 42%;
+    --disabled-foreground: 210 5% 60%;
+
+    --destructive: 4 70% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 146 73% 26%;
+    --success-subtle: 140 40% 93%;
+    --warning: 39 100% 27%;
+    --warning-subtle: 42 70% 93%;
+    --danger-subtle: 5 60% 95%;
+    --info: 210 80% 38%;
+    --info-subtle: 214 60% 94%;
+
+    --border: 45 5% 87%;
+    --input: 210 7% 62%;
+    --ring: 180 76% 25%;
+    --radius: 0.75rem;
+
+    /* Sidebar: tinted panel that reads as "the app" */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 210 8% 28%;
+    --sidebar-primary: 180 76% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 180 30% 94%;
+    --sidebar-accent-foreground: 180 78% 20%;
+    --sidebar-border: 45 5% 87%;
+    --sidebar-ring: 180 76% 25%;
+  }
+
+  .dark {
+    --background: 200 8% 9%;
+    --foreground: 45 10% 92%;
+    --card: 200 7% 13%;
+    --card-foreground: 45 10% 92%;
+    --popover: 200 7% 13%;
+    --popover-foreground: 45 10% 92%;
+
+    --primary: 180 58% 42%;
+    --primary-foreground: 200 30% 8%;
+    --primary-hover: 180 62% 50%;
+    --primary-ink: 180 70% 62%;
+    --accent: 180 30% 17%;
+    --accent-foreground: 180 60% 74%;
+    --accent-secondary: 180 20% 22%;
+
+    --secondary: 200 6% 17%;
+    --secondary-foreground: 45 10% 92%;
+    --muted: 200 6% 17%;
+    --muted-foreground: 210 8% 68%;
+    --disabled-foreground: 210 5% 48%;
+
+    --destructive: 4 70% 60%;
+    --destructive-foreground: 200 30% 8%;
+    --success: 146 55% 55%;
+    --success-subtle: 150 25% 15%;
+    --warning: 42 85% 62%;
+    --warning-subtle: 40 35% 15%;
+    --danger-subtle: 4 30% 15%;
+    --info: 210 80% 66%;
+    --info-subtle: 214 35% 17%;
+
+    --border: 200 5% 22%;
+    --input: 210 8% 55%;
+    --ring: 180 70% 55%;
+
+    --sidebar-background: 200 8% 11%;
+    --sidebar-foreground: 210 8% 74%;
+    --sidebar-primary: 180 58% 42%;
+    --sidebar-primary-foreground: 200 30% 8%;
+    --sidebar-accent: 180 25% 16%;
+    --sidebar-accent-foreground: 180 60% 74%;
+    --sidebar-border: 200 5% 20%;
+    --sidebar-ring: 180 70% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-family: "Inter Variable", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /* JetBrains Mono for IDs, SQL, XML, CSV */
+  .font-mono,
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  kbd {
+    @apply rounded-md border bg-muted px-1.5 py-0.5 font-mono text-muted-foreground;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  html {
+    scroll-padding-top: 4.5rem;
+  }
+  /* Visible focus rings: 2 px accent ring with a thin contrast halo so it
+     reads on both themes and on tinted surfaces (WCAG 2.2 AA, 2.4.13). */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px hsl(var(--background));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+@layer components {
+  /* Skip link: visible on focus only */
+  .skip-link {
+    @apply sr-only;
+  }
+  .skip-link:focus-visible {
+    @apply not-sr-only fixed left-4 top-4 z-[100] rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground;
+    box-shadow:
+      0 1px 2px hsl(200 12% 13% / 0.08),
+      0 8px 24px hsl(200 12% 13% / 0.12);
+  }
+
+  .text-caption {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  /* Toast close buttons ship at ~19 px; WCAG 2.2 AA 2.5.8 needs 24 px. */
+  [data-sonner-toast] [data-close-button],
+  [data-sonner-toast] .close-button {
+    min-width: 24px;
+    min-height: 24px;
+  }
+  .shadow-overlay {
+    box-shadow:
+      0 1px 2px hsl(200 12% 13% / 0.08),
+      0 8px 24px hsl(200 12% 13% / 0.12);
+  }
+}
+
+/* ---- View transitions (React <ViewTransition>) ---- */
+:root {
+  --duration-exit: 150ms;
+  --duration-enter: 210ms;
+  --duration-move: 400ms;
+}
+
+@keyframes vt-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes vt-slide {
+  from { translate: var(--slide-offset); }
+  to { translate: 0; }
+}
+@keyframes vt-slide-y {
+  from { transform: translateY(var(--slide-y-offset, 10px)); }
+  to { transform: translateY(0); }
+}
+
+::view-transition-old(.fade-out) {
+  animation: var(--duration-exit) ease-in vt-fade reverse;
+}
+::view-transition-new(.fade-in) {
+  animation: var(--duration-enter) ease-out var(--duration-exit) both vt-fade;
+}
+
+::view-transition-old(.slide-down) {
+  animation:
+    var(--duration-exit) ease-out both vt-fade reverse,
+    var(--duration-exit) ease-out both vt-slide-y reverse;
+}
+::view-transition-new(.slide-up) {
+  animation:
+    var(--duration-enter) ease-in var(--duration-exit) both vt-fade,
+    var(--duration-move) ease-in both vt-slide-y;
+}
+
+::view-transition-old(.nav-forward) {
+  --slide-offset: -60px;
+  animation:
+    var(--duration-exit) ease-in both vt-fade reverse,
+    var(--duration-move) ease-in-out both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 60px;
+  animation:
+    var(--duration-enter) ease-out var(--duration-exit) both vt-fade,
+    var(--duration-move) ease-in-out both vt-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: 60px;
+  animation:
+    var(--duration-exit) ease-in both vt-fade reverse,
+    var(--duration-move) ease-in-out both vt-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -60px;
+  animation:
+    var(--duration-enter) ease-out var(--duration-exit) both vt-fade,
+    var(--duration-move) ease-in-out both vt-slide;
+}
+
+/* Table names morph from a search result into the table page title. */
+::view-transition-group(.text-morph) {
+  animation-duration: var(--duration-move);
+}
+::view-transition-old(.text-morph) {
+  display: none;
+}
+::view-transition-new(.text-morph) {
+  animation: none;
+  object-fit: none;
+  object-position: left top;
+}
+
+/* Persistent chrome stays put while pages animate. */
+::view-transition-group(site-sidebar),
+::view-transition-group(assistant-fab) {
+  animation: none;
+  z-index: 100;
+}
+/* The header uses backdrop-filter: hide the old snapshot to avoid a flash. */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Catalyst"
+description = "An offline-first operations toolkit for comparing DEV and PROD automation agents, inspecting enterprise data dictionaries, and cleaning pasted lists—all processed locally in the browser."
+version = "1.0.0"
+id = "artifacts/catalyst"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24400
+
+[services.development]
+run = "pnpm --filter @workspace/catalyst run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/catalyst", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/catalyst/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24400"
+BASE_PATH = "/"
